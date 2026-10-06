@@ -2,9 +2,12 @@ package com.github.glodblock.epp.client.model;
 
 import appeng.client.render.DelegateBakedModel;
 import appeng.client.render.model.DriveModelData;
+import com.mojang.math.Transformation;
 import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelState;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -20,11 +23,13 @@ import java.util.Random;
 public class ExDriveBakedModel extends DelegateBakedModel {
     private final Map<Item, BakedModel> cellModels;
     private final BakedModel defaultCellModel;
+    private final ModelState modelTransform;
 
-    public ExDriveBakedModel(BakedModel bakedBase, Map<Item, BakedModel> cellModels, BakedModel defaultCell) {
+    public ExDriveBakedModel(BakedModel bakedBase, Map<Item, BakedModel> cellModels, BakedModel defaultCell, ModelState modelTransform) {
         super(bakedBase);
         this.cellModels = cellModels;
         this.defaultCellModel = defaultCell;
+        this.modelTransform = modelTransform;
     }
 
     public static void getSlotOrigin(int row, int col, int disk, Vector3f translation) {
@@ -44,21 +49,26 @@ public class ExDriveBakedModel extends DelegateBakedModel {
 
         Item[] cells = extraData.getData(DriveModelData.STATE);
 
-        Vector3f slotTranslation = new Vector3f();
+        Vector3f rawSlotTranslation = new Vector3f();
         if (cells != null) {
+            Transformation transformation = modelTransform.getRotation();
+
             for (int disk = 0; disk < 2; disk++) {
                 for (int row = 0; row < 5; row++) {
                     for (int col = 0; col < 2; col++) {
                         int slot = getSlotIndex(row, col, disk);
 
-                        getSlotOrigin(row, col, disk, slotTranslation);
+                        getSlotOrigin(row, col, disk, rawSlotTranslation);
+
+                        // Rotate the translation offset vector according to the blockstate rotation
+                        Vector3f rotatedTranslation = rotateOffset(rawSlotTranslation, transformation);
 
                         Item cell = slot < cells.length ? cells[slot] : null;
                         BakedModel cellChassisModel = getCellChassisModel(cell);
 
                         if (cellChassisModel != null) {
                             for (BakedQuad quad : cellChassisModel.getQuads(state, side, rand, extraData)) {
-                                result.add(translateQuad(quad, slotTranslation));
+                                result.add(translateQuad(quad, rotatedTranslation));
                             }
                         }
                     }
@@ -67,6 +77,15 @@ public class ExDriveBakedModel extends DelegateBakedModel {
         }
 
         return result;
+    }
+
+    private static Vector3f rotateOffset(Vector3f offset, Transformation transformation) {
+        if (transformation.isIdentity()) {
+            return offset;
+        }
+        Vector4f pos = new Vector4f(offset.x() - 0.5f, offset.y() - 0.5f, offset.z() - 0.5f, 1.0f);
+        pos.transform(transformation.getMatrix());
+        return new Vector3f(pos.x() + 0.5f, pos.y() + 0.5f, pos.z() + 0.5f);
     }
 
     private static BakedQuad translateQuad(BakedQuad quad, Vector3f offset) {

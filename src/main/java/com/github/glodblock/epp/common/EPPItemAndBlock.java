@@ -19,6 +19,7 @@ import com.github.glodblock.epp.common.tileentities.TileWirelessConnector;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 
 import javax.annotation.Nonnull;
 
@@ -63,7 +64,7 @@ public class EPPItemAndBlock {
         PATTERN_PROVIDER_UPGRADE = new ItemPatternProviderUpgrade();
         PACKING_TAPE = new ItemMEPackingTape();
         PACKAGE = new ItemPackedDevice();
-        EX_DRIVE = new BlockExDrive();
+        EX_DRIVE = new BlockExDrive(Block.Properties.of(net.minecraft.world.level.material.Material.METAL).strength(3.0F));
         DRIVE_UPGRADE = new ItemDriveUpgrade();
         INGREDIENT_BUFFER = new BlockIngredientBuffer();
         WIRELESS_CONNECTOR = new BlockWirelessConnector();

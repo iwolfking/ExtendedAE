@@ -52,7 +52,7 @@ public class ExDriveModel implements IModelGeometry<ExDriveModel> {
         UnbakedModel unbakedEmptyCell = baker.getModel(MODEL_CELL_EMPTY);
         cellModels.put(Items.AIR, unbakedEmptyCell.bake(baker, spriteGetter, modelTransform, MODEL_CELL_EMPTY));
 
-        return new ExDriveBakedModel(baseModel, cellModels, defaultCell);
+        return new ExDriveBakedModel(baseModel, cellModels, defaultCell, modelTransform);
     }
 
     @Override
