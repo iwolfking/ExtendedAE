@@ -2,41 +2,31 @@ package com.github.glodblock.epp.client.model;
 
 import appeng.client.render.DelegateBakedModel;
 import appeng.client.render.model.DriveModelData;
-import appeng.thirdparty.fabric.MutableQuadView;
-import appeng.thirdparty.fabric.RenderContext;
 import com.mojang.math.Vector3f;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.data.ModelData;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.client.model.data.IModelData;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class ExDriveBakedModel extends DelegateBakedModel {
     private final Map<Item, BakedModel> cellModels;
     private final BakedModel defaultCellModel;
 
-    private final RenderContext.QuadTransform[] slotTransforms;
-
     public ExDriveBakedModel(BakedModel bakedBase, Map<Item, BakedModel> cellModels, BakedModel defaultCell) {
         super(bakedBase);
-        this.defaultCellModel = defaultCell;
-        this.slotTransforms = buildSlotTransforms();
         this.cellModels = cellModels;
+        this.defaultCellModel = defaultCell;
     }
 
-    /**
-     * Calculates the origin of a drive slot for positioning a cell model into it.
-     */
     public static void getSlotOrigin(int row, int col, int disk, Vector3f translation) {
         float xOffset = (9 - col * 8) / 16.0f;
         float yOffset = (13 - row * 3) / 16.0f;
@@ -45,27 +35,31 @@ public class ExDriveBakedModel extends DelegateBakedModel {
     }
 
     @Override
-    public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData extraData, RenderType renderType) {
-        List<BakedQuad> result = new ArrayList<>(super.getQuads(state, side, rand, extraData, renderType));
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand, IModelData extraData) {
+        List<BakedQuad> result = new ArrayList<>(super.getQuads(state, side, rand, extraData));
 
-        var cells = extraData.get(DriveModelData.STATE);
+        if (!extraData.hasProperty(DriveModelData.STATE)) {
+            return result;
+        }
 
-        // Add cell models on top of the base model, if possible
+        Item[] cells = extraData.getData(DriveModelData.STATE);
+
+        Vector3f slotTranslation = new Vector3f();
         if (cells != null) {
             for (int disk = 0; disk < 2; disk++) {
                 for (int row = 0; row < 5; row++) {
                     for (int col = 0; col < 2; col++) {
                         int slot = getSlotIndex(row, col, disk);
 
-                        // Add the cell chassis
+                        getSlotOrigin(row, col, disk, slotTranslation);
+
                         Item cell = slot < cells.length ? cells[slot] : null;
                         BakedModel cellChassisModel = getCellChassisModel(cell);
 
-                        var quadView = MutableQuadView.getInstance();
-                        for (BakedQuad quad : cellChassisModel.getQuads(state, side, rand, ModelData.EMPTY, renderType)) {
-                            quadView.fromVanilla(quad, side);
-                            slotTransforms[slot].transform(quadView);
-                            result.add(quadView.toBlockBakedQuad());
+                        if (cellChassisModel != null) {
+                            for (BakedQuad quad : cellChassisModel.getQuads(state, side, rand, extraData)) {
+                                result.add(translateQuad(quad, slotTranslation));
+                            }
                         }
                     }
                 }
@@ -75,66 +69,38 @@ public class ExDriveBakedModel extends DelegateBakedModel {
         return result;
     }
 
+    private static BakedQuad translateQuad(BakedQuad quad, Vector3f offset) {
+        int[] vertexData = quad.getVertices().clone();
+        int step = vertexData.length / 4;
+
+        for (int i = 0; i < 4; i++) {
+            int index = i * step;
+            float x = Float.intBitsToFloat(vertexData[index]);
+            float y = Float.intBitsToFloat(vertexData[index + 1]);
+            float z = Float.intBitsToFloat(vertexData[index + 2]);
+
+            vertexData[index] = Float.floatToRawIntBits(x + offset.x());
+            vertexData[index + 1] = Float.floatToRawIntBits(y + offset.y());
+            vertexData[index + 2] = Float.floatToRawIntBits(z + offset.z());
+        }
+
+        return new BakedQuad(vertexData, quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade());
+    }
+
     @Override
     public boolean useAmbientOcclusion() {
-        // We have faces inside the chassis that are facing east, but should not receive
-        // ambient occlusion from the east-side, but sadly this cannot be fine-tuned on
-        // a face-by-face basis.
         return false;
     }
 
-    // Determine which drive chassis to show based on the used cell
     public BakedModel getCellChassisModel(Item cell) {
         if (cell == null) {
             return cellModels.get(Items.AIR);
         }
         final BakedModel model = cellModels.get(cell);
-
         return model != null ? model : defaultCellModel;
-    }
-
-    private RenderContext.QuadTransform[] buildSlotTransforms() {
-        RenderContext.QuadTransform[] result = new RenderContext.QuadTransform[5 * 2 * 2];
-        for (int disk = 0; disk < 2; disk++) {
-            for (int row = 0; row < 5; row++) {
-                for (int col = 0; col < 2; col++) {
-
-                    Vector3f translation = new Vector3f();
-                    getSlotOrigin(row, col, disk, translation);
-
-                    result[getSlotIndex(row, col, disk)] = new ExDriveBakedModel.QuadTranslator(translation.x(), translation.y(),
-                            translation.z());
-                }
-            }
-        }
-
-        return result;
     }
 
     private static int getSlotIndex(int row, int col, int disk) {
         return row * 2 + col + disk * 10;
-    }
-
-    private static class QuadTranslator implements RenderContext.QuadTransform {
-        private final float x;
-        private final float y;
-        private final float z;
-
-        public QuadTranslator(float x, float y, float z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        @Override
-        public boolean transform(MutableQuadView quad) {
-            Vector3f target = new Vector3f();
-            for (int i = 0; i < 4; i++) {
-                quad.copyPos(i, target);
-                target.add(x, y, z);
-                quad.pos(i, target);
-            }
-            return true;
-        }
     }
 }

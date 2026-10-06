@@ -3,10 +3,12 @@ package com.github.glodblock.epp.datagen;
 import appeng.datagen.providers.IAE2DataProvider;
 import com.github.glodblock.epp.EPP;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import net.minecraft.core.Registry;
-import net.minecraft.data.CachedOutput;
+import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DataProvider;
+import net.minecraft.data.HashCache;
 import net.minecraft.data.loot.BlockLoot;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -27,18 +29,20 @@ import java.util.function.Function;
 
 public class EPPLootTableProvider extends BlockLoot implements IAE2DataProvider {
     private final Map<Block, Function<Block, LootTable.Builder>> overrides;
-    private final Path outputFolder;
+    private final DataGenerator generator;
 
-    public EPPLootTableProvider(Path outputFolder) {
+    public EPPLootTableProvider(DataGenerator generator) {
         this.overrides = ImmutableMap.of();
-        this.outputFolder = outputFolder;
+        this.generator = generator;
     }
 
-    public void run(@NotNull CachedOutput cache) throws IOException {
+    @Override
+    public void run(@NotNull HashCache cache) throws IOException {
+        Path outputFolder = this.generator.getOutputFolder();
         for (var entry : Registry.BLOCK.entrySet()) {
             if (entry.getKey().location().getNamespace().equals(EPP.MODID)) {
                 var builder = this.overrides.getOrDefault(entry.getValue(), this::defaultBuilder).apply(entry.getValue());
-                DataProvider.saveStable(cache, this.toJson(builder), this.getPath(this.outputFolder, entry.getKey().location()));
+                DataProvider.save(new Gson(), cache, this.toJson(builder), this.getPath(outputFolder, entry.getKey().location()));
             }
         }
     }

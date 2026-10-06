@@ -2,6 +2,7 @@ package com.github.glodblock.epp.common.me.wireless;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 public enum WirelessFail {
 
@@ -11,7 +12,7 @@ public enum WirelessFail {
     MISSING;
 
     public Component getTranslation() {
-        return Component.translatable("chat.wireless_connect." + this.name().toLowerCase()).withStyle(ChatFormatting.RED);
+        return new TranslatableComponent("chat.wireless_connect." + this.name().toLowerCase()).withStyle(ChatFormatting.RED);
     }
 
 }

@@ -11,12 +11,14 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.core.AEConfig;
 import appeng.items.AEBaseItem;
 import appeng.items.storage.StorageCellTooltipComponent;
+import appeng.util.ConfigInventory;
 import com.github.glodblock.epp.common.EPPItemAndBlock;
 import com.github.glodblock.epp.config.EPPConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
@@ -56,12 +58,12 @@ public class InfinityCell extends AEBaseItem implements ICellWorkbenchItem {
 
     @Override
     public @NotNull Component getName(@NotNull ItemStack is) {
-        return Component.translatable("item.expatternprovider.infinity_cell_name", this.getRecord(is).getDisplayName());
+        return new TranslatableComponent("item.expatternprovider.infinity_cell_name", this.getRecord(is).getDisplayName());
     }
 
     @Override
     public void fillItemCategory(@NotNull CreativeModeTab group, @NotNull NonNullList<ItemStack> items) {
-        if (this.allowedIn(group)) {
+        if (this.allowdedIn(group)) {
             EPPConfig.infCellFluid.forEach(f -> items.add(getRecordCell(AEFluidKey.of(f))));
             EPPConfig.infCellItem.forEach(i -> items.add(getRecordCell(AEItemKey.of(i))));
         }
@@ -69,7 +71,7 @@ public class InfinityCell extends AEBaseItem implements ICellWorkbenchItem {
 
     @Override
     public void appendHoverText(@NotNull ItemStack is, Level world, @NotNull List<Component> lines, @NotNull TooltipFlag adv) {
-        lines.add(Component.translatable("infinity.tooltip").withStyle(ChatFormatting.GREEN));
+        lines.add(new TranslatableComponent("infinity.tooltip").withStyle(ChatFormatting.GREEN));
     }
 
     @NotNull
@@ -88,6 +90,16 @@ public class InfinityCell extends AEBaseItem implements ICellWorkbenchItem {
     @Override
     public IUpgradeInventory getUpgrades(ItemStack is) {
         return UpgradeInventories.forItem(is, 1);
+    }
+
+    @Override
+    public boolean isEditable(ItemStack is) {
+        return false;
+    }
+
+    @Override
+    public ConfigInventory getConfigInventory(ItemStack is) {
+        return null;
     }
 
     @Override

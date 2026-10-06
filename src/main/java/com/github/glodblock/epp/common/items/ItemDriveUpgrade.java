@@ -5,6 +5,7 @@ import com.github.glodblock.epp.common.EPPItemAndBlock;
 import com.github.glodblock.epp.common.tileentities.TileExDrive;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -23,7 +24,7 @@ public class ItemDriveUpgrade extends ItemUpgrade {
 
     @Override
     public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> list, @NotNull TooltipFlag tooltipFlag) {
-        list.add(Component.translatable("ed.upgrade.tooltip").withStyle(ChatFormatting.GRAY));
+        list.add(new TranslatableComponent("ed.upgrade.tooltip").withStyle(ChatFormatting.GRAY));
         super.appendHoverText(stack, level, list, tooltipFlag);
     }
 

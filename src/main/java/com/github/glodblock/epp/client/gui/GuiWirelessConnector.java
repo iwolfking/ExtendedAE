@@ -9,6 +9,7 @@ import com.github.glodblock.epp.container.ContainerWirelessConnector;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Inventory;
 
 public class GuiWirelessConnector extends UpgradeableScreen<ContainerWirelessConnector> {
@@ -31,26 +32,26 @@ public class GuiWirelessConnector extends UpgradeableScreen<ContainerWirelessCon
 
     @Override
     public void drawFG(PoseStack poseStack, int offsetX, int offsetY, int mouseX, int mouseY) {
-        int textColor = style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
+        int textColor = this.style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
         int len = 12;
         this.statusIcon.setMessage(this.menu.status.getDesc());
         this.font.draw(
                 poseStack,
-                Component.translatable("gui.wireless_connect.status", this.menu.status.getTranslation()),
+                new TranslatableComponent("gui.wireless_connect.status", this.menu.status.getTranslation()),
                 PADDING_X,
                 PADDING_Y + len,
                 textColor
         );
         this.font.draw(
                 poseStack,
-                Component.translatable("gui.wireless_connect.power", String.format("%.2f", this.menu.powerUse)),
+                new TranslatableComponent("gui.wireless_connect.power", String.format("%.2f", this.menu.powerUse)),
                 PADDING_X,
                 PADDING_Y + len * 2,
                 textColor
         );
         this.font.draw(
                 poseStack,
-                Component.translatable("gui.wireless_connect.channel", this.menu.usedChannel, this.menu.maxChannel),
+                new TranslatableComponent("gui.wireless_connect.channel", this.menu.usedChannel, this.menu.maxChannel),
                 PADDING_X,
                 PADDING_Y + len * 3,
                 textColor
@@ -59,7 +60,7 @@ public class GuiWirelessConnector extends UpgradeableScreen<ContainerWirelessCon
             var pos = BlockPos.of(this.menu.otherSide);
             this.font.draw(
                     poseStack,
-                    Component.translatable("gui.wireless_connect.remote", pos.getX(), pos.getY(), pos.getZ()),
+                    new TranslatableComponent("gui.wireless_connect.remote", pos.getX(), pos.getY(), pos.getZ()),
                     PADDING_X,
                     PADDING_Y + len * 4,
                     textColor

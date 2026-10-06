@@ -19,6 +19,7 @@ import appeng.parts.PartModel;
 import appeng.util.SettingsFrom;
 import com.github.glodblock.epp.EPP;
 import com.github.glodblock.epp.common.EPPItemAndBlock;
+import com.github.glodblock.epp.common.lib.IExtendedPatternProviderHost;
 import com.github.glodblock.epp.container.ContainerExPatternProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -37,13 +38,13 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
-public class PartExPatternProvider extends AEBasePart implements PatternProviderLogicHost {
+public class PartExPatternProvider extends AEBasePart implements PatternProviderLogicHost, IExtendedPatternProviderHost {
 
     public static List<ResourceLocation> MODELS = Arrays.asList(
-            new ResourceLocation(EPP.MODID, "part/ex_pattern_provider_base"),
-            new ResourceLocation(AppEngBase.MOD_ID, "part/interface_on"),
-            new ResourceLocation(AppEngBase.MOD_ID, "part/interface_off"),
-            new ResourceLocation(AppEngBase.MOD_ID, "part/interface_has_channel")
+            ResourceLocation.fromNamespaceAndPath(EPP.MODID, "part/ex_pattern_provider_base"),
+            ResourceLocation.fromNamespaceAndPath(AppEngBase.MOD_ID, "part/interface_on"),
+            ResourceLocation.fromNamespaceAndPath(AppEngBase.MOD_ID, "part/interface_off"),
+            ResourceLocation.fromNamespaceAndPath(AppEngBase.MOD_ID, "part/interface_has_channel")
     );
 
     public static final PartModel MODELS_OFF = new PartModel(MODELS.get(0), MODELS.get(2));
@@ -137,7 +138,7 @@ public class PartExPatternProvider extends AEBasePart implements PatternProvider
     }
 
     protected PatternProviderLogic createLogic() {
-        return new PatternProviderLogic(this.getMainNode(), this, 36);
+        return new PatternProviderLogic(this.getMainNode(), this);
     }
 
     @Override
@@ -155,10 +156,6 @@ public class PartExPatternProvider extends AEBasePart implements PatternProvider
         this.getHost().markForSave();
     }
 
-    @Override
-    public AEItemKey getTerminalIcon() {
-        return AEItemKey.of(this.getPartItem());
-    }
 
     @Override
     public IPartModel getStaticModels() {

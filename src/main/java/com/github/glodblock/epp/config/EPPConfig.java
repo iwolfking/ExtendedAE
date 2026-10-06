@@ -13,6 +13,7 @@ import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,30 +57,37 @@ public class EPPConfig {
         return o instanceof String s && (FCUtil.checkInvalidRL(s, ForgeRegistries.ITEMS) || FCUtil.checkInvalidRL(s, ForgeRegistries.FLUIDS));
     }
 
-    public static int busSpeed;
-    public static double infCellCost;
-    public static double wirelessMaxRange;
-    public static List<Fluid> infCellFluid;
-    public static List<Item> infCellItem;
-    public static List<ResourceLocation> tapeWhitelist;
+    public static int busSpeed = 8;
+    public static double infCellCost = 8.0;
+    public static double wirelessMaxRange = 1000.0;
+    public static List<Fluid> infCellFluid = Collections.emptyList();
+    public static List<Item> infCellItem = Collections.emptyList();
+    public static List<ResourceLocation> tapeWhitelist = Collections.emptyList();
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
         busSpeed = EX_BUS_SPEED.get();
         infCellCost = INFINITY_CELL_ENERGY.get();
         wirelessMaxRange = WIRELESS_CONNECTOR_RANGE.get();
-        infCellFluid = new ArrayList<>();
-        infCellItem = new ArrayList<>();
-        INFINITY_CELL_TYPES.get()
-                .forEach(s -> {
-                    if (FCUtil.checkInvalidRL(s, ForgeRegistries.ITEMS)) {
-                        infCellItem.add(ForgeRegistries.ITEMS.getValue(new ResourceLocation(s)));
-                    }
-                    if (FCUtil.checkInvalidRL(s, ForgeRegistries.FLUIDS)) {
-                        infCellFluid.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(s)));
-                    }
-                });
-        tapeWhitelist = PACKABLE_AE_DEVICE.get().stream().map(ResourceLocation::new).collect(Collectors.toList());
+
+        List<Fluid> fluids = new ArrayList<>();
+        List<Item> items = new ArrayList<>();
+
+        INFINITY_CELL_TYPES.get().forEach(s -> {
+            ResourceLocation rl = ResourceLocation.parse(s);
+            if (FCUtil.checkInvalidRL(s, ForgeRegistries.ITEMS)) {
+                Item item = ForgeRegistries.ITEMS.getValue(rl);
+                if (item != null) items.add(item);
+            }
+            if (FCUtil.checkInvalidRL(s, ForgeRegistries.FLUIDS)) {
+                Fluid fluid = ForgeRegistries.FLUIDS.getValue(rl);
+                if (fluid != null) fluids.add(fluid);
+            }
+        });
+
+        infCellFluid = fluids;
+        infCellItem = items;
+        tapeWhitelist = PACKABLE_AE_DEVICE.get().stream().map(ResourceLocation::parse).collect(Collectors.toList());
     }
 
 }

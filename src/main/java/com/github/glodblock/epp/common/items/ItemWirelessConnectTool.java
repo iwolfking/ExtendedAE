@@ -11,6 +11,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -40,10 +41,10 @@ public class ItemWirelessConnectTool extends Item {
                 .orElse(null);
         BlockPos pos = globalPos != null ? globalPos.pos() : BlockPos.ZERO;
         if (freq != 0) {
-            lines.add(Component.translatable("wireless.tooltip", pos.getX(), pos.getY(), pos.getZ()).withStyle(ChatFormatting.GRAY));
-            lines.add(Component.translatable("wireless.use.tooltip.02").withStyle(ChatFormatting.GRAY));
+            lines.add(new TranslatableComponent("wireless.tooltip", pos.getX(), pos.getY(), pos.getZ()).withStyle(ChatFormatting.GRAY));
+            lines.add(new TranslatableComponent("wireless.use.tooltip.02").withStyle(ChatFormatting.GRAY));
         } else {
-            lines.add(Component.translatable("wireless.use.tooltip.01").withStyle(ChatFormatting.GRAY));
+            lines.add(new TranslatableComponent("wireless.use.tooltip.01").withStyle(ChatFormatting.GRAY));
         }
     }
 
@@ -53,7 +54,7 @@ public class ItemWirelessConnectTool extends Item {
         var stack = player.getItemInHand(hand);
         if (InteractionUtil.isInAlternateUseMode(player) && stack.getItem() == EPPItemAndBlock.WIRELESS_TOOL) {
             stack.setTag(null);
-            player.displayClientMessage(Component.translatable("chat.wireless_connect.clear"), true);
+            player.displayClientMessage(new TranslatableComponent("chat.wireless_connect.clear"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
         }
         return InteractionResultHolder.pass(stack);

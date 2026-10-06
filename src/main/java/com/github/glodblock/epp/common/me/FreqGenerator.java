@@ -4,8 +4,9 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Random;
 
 public interface FreqGenerator<T> {
 
@@ -26,7 +27,7 @@ public interface FreqGenerator<T> {
 class LongFreqGen implements FreqGenerator<Long> {
 
     private final LongSet USED = new LongOpenHashSet();
-    private final RandomSource R = RandomSource.create();
+    private final Random R = new Random();
 
     @Override
     public @NotNull Long genFreq() {
@@ -50,7 +51,7 @@ class LongFreqGen implements FreqGenerator<Long> {
 class IntFreqGen implements FreqGenerator<Integer> {
 
     private final IntSet USED = new IntOpenHashSet();
-    private final RandomSource R = RandomSource.create();
+    private final Random R = new Random();
 
     @Override
     public @NotNull Integer genFreq() {

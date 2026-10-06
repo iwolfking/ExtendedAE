@@ -26,14 +26,16 @@ import com.github.glodblock.epp.container.ContainerExPatternProvider;
 import com.github.glodblock.epp.container.ContainerIngredientBuffer;
 import com.github.glodblock.epp.container.ContainerWirelessConnector;
 import com.github.glodblock.epp.util.FCUtil;
-import net.minecraft.core.Registry;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegisterEvent;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -68,49 +70,68 @@ public class RegistryHandler {
     }
 
     @SubscribeEvent
-    public void runRegister(RegisterEvent event) {
-        if (event.getRegistryKey().equals(Registry.BLOCK_REGISTRY)) {
-            this.onRegisterBlocks();
-            this.onRegisterItems();
-            this.onRegisterTileEntities();
-            this.onRegisterContainer();
-            this.onRegisterModels();
+    public void runRegister(RegistryEvent.Register<Block> event) {
+        this.onRegisterBlocks();
+    }
+
+    @SubscribeEvent
+    public void runRegisterItems(RegistryEvent.Register<Item> event) {
+        this.onRegisterItems();
+        this.onRegisterModels();
+    }
+
+    @SubscribeEvent
+    public void runRegisterTiles(RegistryEvent.Register<BlockEntityType<?>> event) {
+        this.onRegisterTileEntities();
+    }
+
+    @SubscribeEvent
+    public void runRegisterMenus(RegistryEvent.Register<MenuType<?>> event) {
+        this.onRegisterContainer(event.getRegistry());
+    }
+
+    private <V extends IForgeRegistryEntry<V>> V register(IForgeRegistry<V> registry, String name, V entry) {
+        if (entry.getRegistryName() == null) {
+            entry.setRegistryName(EPP.id(name));
         }
+        registry.register(entry);
+        return entry;
     }
 
     private void onRegisterBlocks() {
         for (Pair<String, Block> entry : blocks) {
-            String key = entry.getLeft();
-            Block block = entry.getRight();
-            ForgeRegistries.BLOCKS.register(EPP.id(key), block);
+            register(ForgeRegistries.BLOCKS, entry.getLeft(), entry.getRight());
         }
     }
 
     private void onRegisterItems() {
         for (Pair<String, Block> entry : blocks) {
-            ForgeRegistries.ITEMS.register(EPP.id(entry.getLeft()), new AEBaseBlockItem(entry.getRight(), new Item.Properties().tab(EPPItemAndBlock.TAB)));
+            AEBaseBlockItem item = new AEBaseBlockItem(entry.getRight(), new Item.Properties().tab(EPPItemAndBlock.TAB));
+            register(ForgeRegistries.ITEMS, entry.getLeft(), item);
         }
         for (Pair<String, Item> entry : items) {
-            ForgeRegistries.ITEMS.register(EPP.id(entry.getLeft()), entry.getRight());
+            register(ForgeRegistries.ITEMS, entry.getLeft(), entry.getRight());
         }
     }
 
     private void onRegisterTileEntities() {
         for (Pair<String, BlockEntityType<?>> entry : tiles) {
-            String key = entry.getLeft();
-            BlockEntityType<?> tile = entry.getRight();
-            ForgeRegistries.BLOCK_ENTITY_TYPES.register(EPP.id(key), tile);
+            register(ForgeRegistries.BLOCK_ENTITIES, entry.getLeft(), entry.getRight());
         }
     }
 
-    private void onRegisterContainer() {
-        ForgeRegistries.MENU_TYPES.register(AppEng.makeId("ex_pattern_provider"), ContainerExPatternProvider.TYPE);
-        ForgeRegistries.MENU_TYPES.register(AppEng.makeId("ex_interface"), ContainerExInterface.TYPE);
-        ForgeRegistries.MENU_TYPES.register(AppEng.makeId("ex_export_bus"), ContainerExIOBus.EXPORT_TYPE);
-        ForgeRegistries.MENU_TYPES.register(AppEng.makeId("ex_import_bus"), ContainerExIOBus.IMPORT_TYPE);
-        ForgeRegistries.MENU_TYPES.register(AppEng.makeId("ex_drive"), ContainerExDrive.TYPE);
-        ForgeRegistries.MENU_TYPES.register(AppEng.makeId("ingredient_buffer"), ContainerIngredientBuffer.TYPE);
-        ForgeRegistries.MENU_TYPES.register(AppEng.makeId("wireless_connector"), ContainerWirelessConnector.TYPE);
+    private void onRegisterContainer(IForgeRegistry<MenuType<?>> registry) {
+        registerMenu(registry, ContainerExPatternProvider.TYPE);
+        registerMenu(registry, ContainerExInterface.TYPE);
+        registerMenu(registry, ContainerExIOBus.EXPORT_TYPE);
+        registerMenu(registry, ContainerExIOBus.IMPORT_TYPE);
+        registerMenu(registry, ContainerExDrive.TYPE);
+        registerMenu(registry, ContainerIngredientBuffer.TYPE);
+        registerMenu(registry, ContainerWirelessConnector.TYPE);
+    }
+
+    private <T extends MenuType<?>> void registerMenu(IForgeRegistry<MenuType<?>> registry, T menuType) {
+        registry.register(menuType);
     }
 
     private <T extends AEBaseBlockEntity> void bindTileEntity(Class<T> clazz, AEBaseEntityBlock<T> block, BlockEntityType.BlockEntitySupplier<? extends T> supplier) {

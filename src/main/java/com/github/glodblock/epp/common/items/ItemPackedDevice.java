@@ -10,6 +10,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.*;
@@ -40,23 +41,23 @@ public class ItemPackedDevice extends Item {
             assert tag != null;
             if (checkNBT(tag)) {
                 if (tag.getBoolean("part")) {
-                    var item = ForgeRegistries.ITEMS.getHolder(new ResourceLocation(tag.getString("id")));
+                    var item = ForgeRegistries.ITEMS.getHolder(ResourceLocation.parse(tag.getString("id")));
                     if (item.isPresent()) {
-                        var name = Platform.getItemDisplayName(item.get().get(), new CompoundTag());
-                        lines.add(Component.translatable("packaged_device.tooltip", name).withStyle(ChatFormatting.GRAY));
+                        var name = Platform.getItemDisplayName(item.get().value(), new CompoundTag());
+                        lines.add(new TranslatableComponent("packaged_device.tooltip", name).withStyle(ChatFormatting.GRAY));
                         return;
                     }
                 } else {
-                    var item = ForgeRegistries.BLOCKS.getHolder(new ResourceLocation(tag.getString("block_id")));
+                    var item = ForgeRegistries.BLOCKS.getHolder(ResourceLocation.parse(tag.getString("block_id")));
                     if (item.isPresent()) {
-                        var name = Platform.getItemDisplayName(item.get().get().asItem(), new CompoundTag());
-                        lines.add(Component.translatable("packaged_device.tooltip", name).withStyle(ChatFormatting.GRAY));
+                        var name = Platform.getItemDisplayName(item.get().value().asItem(), new CompoundTag());
+                        lines.add(new TranslatableComponent("packaged_device.tooltip", name).withStyle(ChatFormatting.GRAY));
                         return;
                     }
                 }
             }
         }
-        lines.add(Component.translatable("packaged_device.error.tooltip").withStyle(ChatFormatting.RED));
+        lines.add(new TranslatableComponent("packaged_device.error.tooltip").withStyle(ChatFormatting.RED));
     }
 
     @Nonnull
@@ -75,9 +76,9 @@ public class ItemPackedDevice extends Item {
             return InteractionResult.FAIL;
         }
         if (ctx.getBoolean("part")) {
-            var itemO = ForgeRegistries.ITEMS.getHolder(new ResourceLocation(ctx.getString("id")));
+            var itemO = ForgeRegistries.ITEMS.getHolder(ResourceLocation.parse(ctx.getString("id")));
             if (itemO.isPresent()) {
-                var item = itemO.get().get();
+                var item = itemO.get().value();
                 if (item instanceof IPartItem<?> partItem) {
                     var placement = PartPlacement.getPartPlacement(context.getPlayer(), world, new ItemStack(partItem), pos, side);
                     if (placement != null) {
@@ -94,9 +95,9 @@ public class ItemPackedDevice extends Item {
             }
             return InteractionResult.PASS;
         } else {
-            var blockO = ForgeRegistries.BLOCK_ENTITY_TYPES.getHolder(new ResourceLocation(ctx.getString("id")));
+            var blockO = ForgeRegistries.BLOCK_ENTITIES.getHolder(ResourceLocation.parse(ctx.getString("id")));
             if (blockO.isPresent()) {
-                var block = blockO.get().get();
+                var block = blockO.get().value();
                 var state = NbtUtils.readBlockState(ctx.getCompound("state"));
                 var item = state.getBlock().asItem();
                 if (item instanceof BlockItem blockItem && context.getPlayer() != null) {

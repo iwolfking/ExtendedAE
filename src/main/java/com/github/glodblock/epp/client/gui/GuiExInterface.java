@@ -43,7 +43,8 @@ public class GuiExInterface extends UpgradeableScreen<ContainerExInterface> {
                 menu.openSetAmountMenu(configSlot.getSlotIndex());
             });
             button.setDisableBackground(true);
-            button.setMessage(ButtonToolTips.InterfaceSetStockAmount.text());
+            //button.setMessage(ButtonToolTips.InterfaceSetStockAmount.text());
+            button.setMessage(ButtonToolTips.InterfaceBlockingMode.text());
             widgets.add("amtButton" + (1 + i), button);
             amountButtons.add(button);
         }

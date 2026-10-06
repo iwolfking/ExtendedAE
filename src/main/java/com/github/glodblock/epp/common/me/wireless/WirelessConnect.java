@@ -10,8 +10,9 @@ import com.github.glodblock.epp.EPP;
 import com.github.glodblock.epp.common.tileentities.TileWirelessConnector;
 import com.github.glodblock.epp.config.EPPConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,8 +37,8 @@ public class WirelessConnect implements IActionHost {
     }
 
     @SubscribeEvent
-    public void onUnload(final LevelEvent.Unload e) {
-        if (this.host.getLevel() == e.getLevel()) {
+    public void onUnload(final WorldEvent.Unload e) {
+        if (this.host.getLevel() == e.getWorld()) {
             this.destroy();
         }
     }

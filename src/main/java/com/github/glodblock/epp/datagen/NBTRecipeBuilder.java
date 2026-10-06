@@ -101,8 +101,8 @@ public class NBTRecipeBuilder implements RecipeBuilder {
 
     public void save(Consumer<FinishedRecipe> p_126141_, @NotNull ResourceLocation p_126142_) {
         this.ensureValid(p_126142_);
-        this.advancement.parent(ROOT_RECIPE_ADVANCEMENT).addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(p_126142_)).rewards(AdvancementRewards.Builder.recipe(p_126142_)).requirements(RequirementsStrategy.OR);
-        p_126141_.accept(new NBTRecipeBuilder.Result(p_126142_, this.result, this.group == null ? "" : this.group, this.rows, this.key, this.advancement, new ResourceLocation(p_126142_.getNamespace(), "recipes/" + Objects.requireNonNull(this.result.getItem().getItemCategory()).getRecipeFolderName() + "/" + p_126142_.getPath())));
+        this.advancement.addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(p_126142_)).rewards(AdvancementRewards.Builder.recipe(p_126142_)).requirements(RequirementsStrategy.OR);
+        p_126141_.accept(new NBTRecipeBuilder.Result(p_126142_, this.result, this.group == null ? "" : this.group, this.rows, this.key, this.advancement, ResourceLocation.fromNamespaceAndPath(p_126142_.getNamespace(), "recipes/" + Objects.requireNonNull(this.result.getItem().getItemCategory()).getRecipeFolderName() + "/" + p_126142_.getPath())));
     }
 
     private void ensureValid(ResourceLocation p_126144_) {

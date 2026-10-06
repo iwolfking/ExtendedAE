@@ -15,6 +15,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -112,7 +113,7 @@ public class BlockWirelessConnector  extends BlockBaseGui<TileWirelessConnector>
                     otherConnector.setFreq(f);
                     tile.setFreq(f);
                     stack.setTag(null);
-                    p.displayClientMessage(Component.translatable("chat.wireless_connect", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
+                    p.displayClientMessage(new TranslatableComponent("chat.wireless_connect", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
                     return InteractionResult.sidedSuccess(world.isClientSide);
                 } else {
                     p.displayClientMessage(WirelessFail.MISSING.getTranslation(), true);
@@ -124,7 +125,7 @@ public class BlockWirelessConnector  extends BlockBaseGui<TileWirelessConnector>
                 GlobalPos.CODEC.encodeStart(NbtOps.INSTANCE, globalPos)
                         .result()
                         .ifPresent(tag -> stack.getOrCreateTag().put("bind", tag));
-                p.displayClientMessage(Component.translatable("chat.wireless_bind", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
+                p.displayClientMessage(new TranslatableComponent("chat.wireless_bind", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
                 return InteractionResult.sidedSuccess(world.isClientSide);
             }
         }

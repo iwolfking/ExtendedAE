@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "MixinAEBasePart",
-    "MixinInterfaceLogic"
+    "MixinInterfaceLogic",
+    "MixinPatternProviderLogic",
+    "MixinPatternProviderMenu"
   ],
   "client": [],
   "server": []

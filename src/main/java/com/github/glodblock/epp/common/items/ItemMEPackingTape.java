@@ -9,8 +9,9 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -56,7 +57,7 @@ public class ItemMEPackingTape extends Item {
                     part.writeToNBT(ctxTag);
                     ctxTag.putBoolean("exae_reload", true);
                     tag.put("ctx", ctxTag);
-                    cable.removePart(part);
+                    cable.removePart(side);
                 }
             } else {
                 tag.putBoolean("part", false);
@@ -65,7 +66,7 @@ public class ItemMEPackingTape extends Item {
                 if (!WHITE_LIST.contains(blockId)) {
                     return InteractionResult.PASS;
                 }
-                var id = ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(tile.getType());
+                var id = ForgeRegistries.BLOCK_ENTITIES.getKey(tile.getType());
                 assert id != null;
                 assert blockId != null;
                 tag.putString("id", id.toString());
@@ -80,7 +81,18 @@ public class ItemMEPackingTape extends Item {
                 var pack = new ItemStack(EPPItemAndBlock.PACKAGE);
                 pack.setTag(tag);
                 Platform.spawnDrops(world, pos, Collections.singletonList(pack));
-                context.getItemInHand().hurt(1, RandomSource.create(), null);
+
+                var player = context.getPlayer();
+                if (player != null) {
+                    context.getItemInHand().hurtAndBreak(1, player, p -> p.broadcastBreakEvent(context.getHand()));
+                } else if (!world.isClientSide()) {
+                    var stack = context.getItemInHand();
+                    if (stack.hurt(1, world.getRandom(), null)) {
+                        stack.shrink(1);
+                        stack.setDamageValue(0);
+                    }
+                }
+
                 return InteractionResult.sidedSuccess(world.isClientSide);
             }
         }
@@ -89,7 +101,7 @@ public class ItemMEPackingTape extends Item {
 
     @Override
     public void appendHoverText(@NotNull ItemStack is, Level world, @NotNull List<Component> lines, @NotNull TooltipFlag adv) {
-        lines.add(Component.translatable("me_packing_tape.tooltip").withStyle(ChatFormatting.GRAY));
+        lines.add(new TranslatableComponent("me_packing_tape.tooltip").withStyle(ChatFormatting.GRAY));
     }
 
     public static void registerPackableDevice(ResourceLocation id) {

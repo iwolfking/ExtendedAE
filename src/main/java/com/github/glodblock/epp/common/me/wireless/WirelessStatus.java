@@ -2,6 +2,7 @@ package com.github.glodblock.epp.common.me.wireless;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 
 public enum WirelessStatus {
 
@@ -11,11 +12,11 @@ public enum WirelessStatus {
     NO_POWER;
 
     public MutableComponent getTranslation() {
-        return Component.translatable("gui.wireless_connect.status." + this.name().toLowerCase());
+        return new TranslatableComponent("gui.wireless_connect.status." + this.name().toLowerCase());
     }
 
     public MutableComponent getDesc() {
-        return Component.translatable("gui.wireless_connect.status."  + this.name().toLowerCase() + ".desc");
+        return new TranslatableComponent("gui.wireless_connect.status."  + this.name().toLowerCase() + ".desc");
     }
 
 }

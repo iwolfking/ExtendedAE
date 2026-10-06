@@ -1,11 +1,11 @@
 modLoader="javafml"
-loaderVersion="[43,)"
+loaderVersion="[40,)"
 license="LGPL-3.0"
 [[mods]]
 modId="expatternprovider"
 issueTrackerURL="https://github.com/GlodBlock/ExtendedAE/issues"
 displayURL="https://github.com/GlodBlock/ExtendedAE"
-version="1.19-0.2.2-forge"
+version="1.18-0.2.2-forge"
 displayName="ExtendedAE"
 authors="GlodBlock"
 logoFile="logo.png"
@@ -16,18 +16,18 @@ Add some QoL extended contents for AE2
 [[dependencies.expatternprovider]]
     modId="forge"
     mandatory=true
-    versionRange="[43,)"
+    versionRange="[40,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.expatternprovider]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.2,1.20)"
+    versionRange="[1.18.2,1.19)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.expatternprovider]]
     modId="ae2"
     mandatory=true
-    versionRange="[12.9.5,)"
+    versionRange="[11.7.6,)"
     ordering="AFTER"
     side="BOTH"

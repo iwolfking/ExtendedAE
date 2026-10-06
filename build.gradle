@@ -26,7 +26,7 @@ plugins {
 
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.19-0.2.2-forge'
+version = '1.18-0.2.2-forge'
 group = 'com.github.glodblock.epp'
 archivesBaseName = 'ExtendedAE'
 
@@ -35,7 +35,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
-    mappings channel: 'official', version: '1.19.2'
+    mappings channel: 'official', version: '1.18.2'
 
     // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     runs {
@@ -116,14 +116,14 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.2-43.2.0'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.3.12'
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
-    runtimeOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.6.0.1016")
-    compileOnly fg.deobf("curse.maven:applied-mekanistics-574300:4380709")
-    compileOnly fg.deobf("curse.maven:applied-botanics-addon-610632:4742028")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.18.2-forge:10.2.1.1009")
+    compileOnly fg.deobf("curse.maven:applied-mekanistics-574300:3968835")
+    compileOnly fg.deobf("curse.maven:applied-botanics-addon-610632:5643209")
     // for some reason this deobf jar fails to load at file correctly
-    compileOnly fg.deobf("appeng:appliedenergistics2-forge:12.9.5")
-    runtimeOnly fg.deobf("curse.maven:applied-energistics-2-223794:4548558")
+    compileOnly fg.deobf("appeng:appliedenergistics2-forge:11.7.6")
+    runtimeOnly fg.deobf("curse.maven:applied-energistics-2-223794:4733112")
 }
 
 jar {
