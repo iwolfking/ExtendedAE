@@ -37,6 +37,7 @@ public class EPP {
         bus.register(RegistryHandler.INSTANCE);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> bus.register(ClientRegistryHandler.INSTANCE));
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> bus.addListener(ClientRegistryHandler.INSTANCE::registerRotatableBlock));
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> bus.addListener(ClientRegistryHandler.INSTANCE::modelRegistryEvent));
         bus.addListener(this::commonSetup);
         bus.addListener(this::clientSetup);
     }
@@ -52,7 +53,7 @@ public class EPP {
     }
 
     public static ResourceLocation id(String id) {
-        return new ResourceLocation(MODID, id);
+        return ResourceLocation.fromNamespaceAndPath(MODID, id);
     }
 
     public MinecraftServer getServer() {

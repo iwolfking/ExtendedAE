@@ -9,28 +9,29 @@ import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.AEBaseBlockEntity;
 import appeng.blockentity.ClientTickingBlockEntity;
 import appeng.blockentity.ServerTickingBlockEntity;
+import appeng.client.render.SimpleModelLoader;
 import appeng.core.AppEng;
 import appeng.core.definitions.AEItems;
+import appeng.items.parts.PartModelsHelper;
 import com.github.glodblock.epp.EPP;
+import com.github.glodblock.epp.client.model.ExDriveModel;
 import com.github.glodblock.epp.common.inventory.InfinityCellInventory;
 import com.github.glodblock.epp.common.items.ItemMEPackingTape;
-import com.github.glodblock.epp.common.parts.PartExExportBus;
-import com.github.glodblock.epp.common.parts.PartExImportBus;
-import com.github.glodblock.epp.common.parts.PartExInterface;
-import com.github.glodblock.epp.common.parts.PartExPatternProvider;
+import com.github.glodblock.epp.common.parts.*;
 import com.github.glodblock.epp.config.EPPConfig;
-import com.github.glodblock.epp.container.ContainerExDrive;
-import com.github.glodblock.epp.container.ContainerExIOBus;
-import com.github.glodblock.epp.container.ContainerExInterface;
-import com.github.glodblock.epp.container.ContainerExPatternProvider;
-import com.github.glodblock.epp.container.ContainerIngredientBuffer;
-import com.github.glodblock.epp.container.ContainerWirelessConnector;
+import com.github.glodblock.epp.container.*;
 import com.github.glodblock.epp.util.FCUtil;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.client.model.geometry.IModelGeometry;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -40,6 +41,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class RegistryHandler {
 
@@ -128,6 +130,7 @@ public class RegistryHandler {
         registerMenu(registry, ContainerExDrive.TYPE);
         registerMenu(registry, ContainerIngredientBuffer.TYPE);
         registerMenu(registry, ContainerWirelessConnector.TYPE);
+        registerMenu(registry, AdvancedInterfaceTerminalMenu.TYPE);
     }
 
     private <T extends MenuType<?>> void registerMenu(IForgeRegistry<MenuType<?>> registry, T menuType) {
@@ -195,6 +198,6 @@ public class RegistryHandler {
         PartModels.registerModels(PartExInterface.MODELS);
         PartModels.registerModels(PartExExportBus.MODELS);
         PartModels.registerModels(PartExImportBus.MODELS);
+        PartModels.registerModels(PartModelsHelper.createModels(AdvancedPatternAccessTerminalPart.class));
     }
-
 }

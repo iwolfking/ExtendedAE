@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CDC",
+    "FEF"
+  ],
+  "key": {
+    "C": {
+      "tag": "ae2:glass_cable"
+    },
+    "D": {
+      "item": "ae2:drive"
+    },
+    "F": {
+      "tag": "forge:dusts/fluix"
+    },
+    "E": {
+      "item": "ae2:capacity_card"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:ex_drive"
+  }
+}

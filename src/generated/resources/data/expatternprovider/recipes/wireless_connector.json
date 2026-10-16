@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DWD",
+    "CEC",
+    "DWD"
+  ],
+  "key": {
+    "D": {
+      "item": "ae2:sky_dust"
+    },
+    "W": {
+      "item": "ae2:wireless_receiver"
+    },
+    "C": {
+      "tag": "ae2:smart_cable"
+    },
+    "E": {
+      "item": "ae2:engineering_processor"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:wireless_connect",
+    "count": 2
+  }
+}

@@ -32,40 +32,37 @@ public class ExDriveTESR implements BlockEntityRenderer<TileExDrive> {
             throw new IllegalStateException("Expected extended drive to have 20 slots");
         }
 
-        ms.pushPose();
-        ms.translate(0.5, 0.5, 0.5);
-        FacingToRotation.get(drive.getForward(), drive.getUp()).push(ms);
-        ms.translate(-0.5, -0.5, -0.5);
-
         var buffer = buffers.getBuffer(CellLedRenderer.RENDER_LAYER);
 
         Vector3f slotTranslation = new Vector3f();
-        for (int disk = 0; disk < 2; disk ++) {
+        for (int disk = 0; disk < 2; disk++) {
             for (int row = 0; row < 5; row++) {
                 for (int col = 0; col < 2; col++) {
-                    ms.pushPose();
-
-                    ExDriveBakedModel.getSlotOrigin(row, col, disk, slotTranslation);
-                    ms.translate(slotTranslation.x(), slotTranslation.y(), slotTranslation.z());
                     int slot = row * 2 + col + disk * 10;
-                    CellLedRenderer.renderLed(drive, slot, buffer, ms);
+                    Vector3f color = CellLedRenderer.getColorForSlot(drive, slot);
+                    if (color == null) {
+                        continue;
+                    }
 
+                    ms.pushPose();
+                    ms.translate(0.5, 0.5, 0.5);
+                    FacingToRotation.get(drive.getForward(), drive.getUp()).push(ms);
+                    
+                    ExDriveBakedModel.getSlotOrigin(row, col, disk, slotTranslation);
+                    ms.translate(slotTranslation.x() - 0.5f, slotTranslation.y() - 0.5f, slotTranslation.z() - 0.5f);
+
+                    CellLedRenderer.renderLed(color, buffer, ms);
                     ms.popPose();
                 }
             }
         }
-
-        ms.popPose();
     }
 
     private static class CellLedRenderer {
 
         private static final EnumMap<CellState, Vector3f> STATE_COLORS;
 
-        // Color to use if the cell is present but unpowered
         private static final Vector3f UNPOWERED_COLOR = new Vector3f(0, 0, 0);
-
-        // Color used for the cell indicator for blinking during recent activity
         private static final Vector3f BLINK_COLOR = new Vector3f(1, 0.5f, 0.5f);
 
         static {
@@ -80,7 +77,6 @@ public class ExDriveTESR implements BlockEntityRenderer<TileExDrive> {
             }
         }
 
-        // The positions are based on the upper left slot in a drive
         private static final float L = 5 / 16.f; // left (x-axis)
         private static final float R = 4 / 16.f; // right (x-axis)
         private static final float T = 1 / 16.f; // top (y-axis)
@@ -88,8 +84,6 @@ public class ExDriveTESR implements BlockEntityRenderer<TileExDrive> {
         private static final float FR = -0.001f / 16.f; // front (z-axis)
         private static final float BA = 0.499f / 16.f; // back (z-axis)
 
-        // Vertex data for the LED cuboid (has no back)
-        // Directions are when looking from the front onto the LED
         private static final float[] LED_QUADS = {
                 // Front Face
                 R, T, FR, L, T, FR, L, B, FR, R, B, FR,
@@ -100,7 +94,8 @@ public class ExDriveTESR implements BlockEntityRenderer<TileExDrive> {
                 // Top Face
                 R, T, BA, L, T, BA, L, T, FR, R, T, FR,
                 // Bottom Face
-                R, B, FR, L, B, FR, L, B, BA, R, B, BA, };
+                R, B, FR, L, B, FR, L, B, BA, R, B, BA,
+        };
 
         public static final RenderType RENDER_LAYER = RenderType.create("extended_drive_leds",
                 DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 32565, false, true,
@@ -108,23 +103,18 @@ public class ExDriveTESR implements BlockEntityRenderer<TileExDrive> {
                         .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getPositionColorShader))
                         .createCompositeState(false));
 
-        public static void renderLed(IChestOrDrive drive, int slot, VertexConsumer buffer, PoseStack ms) {
-
-            Vector3f color = getColorForSlot(drive, slot);
-            if (color == null) {
-                return;
-            }
-
+        public static void renderLed(Vector3f color, VertexConsumer buffer, PoseStack ms) {
+            var matrix = ms.last().pose();
             for (int i = 0; i < LED_QUADS.length; i += 3) {
                 float x = LED_QUADS[i];
                 float y = LED_QUADS[i + 1];
                 float z = LED_QUADS[i + 2];
-                buffer.vertex(ms.last().pose(), x, y, z).color(color.x(), color.y(), color.z(), 1.f)
+                buffer.vertex(matrix, x, y, z).color(color.x(), color.y(), color.z(), 1.f)
                         .endVertex();
             }
         }
 
-        private static Vector3f getColorForSlot(IChestOrDrive drive, int slot) {
+        public static Vector3f getColorForSlot(IChestOrDrive drive, int slot) {
             var state = drive.getCellStatus(slot);
             if (state == CellState.ABSENT) {
                 return null;
@@ -134,7 +124,6 @@ public class ExDriveTESR implements BlockEntityRenderer<TileExDrive> {
             }
             Vector3f col = STATE_COLORS.get(state);
             if (drive.isCellBlinking(slot)) {
-                // 200 ms interval (100ms to get to red, then 100ms back)
                 long t = System.currentTimeMillis() % 200;
                 float f = (t - 100) / 200.0f + 0.5f;
                 f = easeInOutCubic(f);
@@ -151,8 +140,5 @@ public class ExDriveTESR implements BlockEntityRenderer<TileExDrive> {
 
         private CellLedRenderer() {
         }
-
     }
-
-
 }

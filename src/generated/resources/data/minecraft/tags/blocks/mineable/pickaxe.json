@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "expatternprovider:ex_pattern_provider",
+    "expatternprovider:ex_interface",
+    "expatternprovider:ingredient_buffer",
+    "expatternprovider:wireless_connect",
+    "expatternprovider:ex_drive"
+  ]
+}

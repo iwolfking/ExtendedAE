@@ -1,8 +1,7 @@
 {
   "variants": {
-    "facing=north": { "model": "expatternprovider:block/ex_drive" },
-    "facing=east":  { "model": "expatternprovider:block/ex_drive", "y": 90 },
-    "facing=south": { "model": "expatternprovider:block/ex_drive", "y": 180 },
-    "facing=west":  { "model": "expatternprovider:block/ex_drive", "y": 270 }
+    "": {
+      "model": "expatternprovider:block/ex_drive"
+    }
   }
 }

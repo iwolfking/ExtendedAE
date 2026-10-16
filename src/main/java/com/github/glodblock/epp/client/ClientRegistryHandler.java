@@ -1,37 +1,25 @@
 package com.github.glodblock.epp.client;
 
-import appeng.client.gui.implementations.PatternProviderScreen;
-import appeng.client.gui.layout.SlotGridLayout;
-import appeng.client.gui.style.ScreenStyle;
+import appeng.client.render.SimpleModelLoader;
 import appeng.client.render.model.AutoRotatingBakedModel;
 import appeng.init.client.InitScreens;
 import appeng.menu.SlotSemantics;
 import com.github.glodblock.epp.EPP;
-import com.github.glodblock.epp.client.gui.GuiExDrive;
-import com.github.glodblock.epp.client.gui.GuiExIOBus;
-import com.github.glodblock.epp.client.gui.GuiExInterface;
-import com.github.glodblock.epp.client.gui.GuiExPatternProvider;
-import com.github.glodblock.epp.client.gui.GuiIngredientBuffer;
-import com.github.glodblock.epp.client.gui.GuiWirelessConnector;
+import com.github.glodblock.epp.client.gui.*;
 import com.github.glodblock.epp.client.model.AERotatableBlocks;
-import com.github.glodblock.epp.client.model.ExDriveModel.Loader;
+import com.github.glodblock.epp.client.model.ExDriveModel;
 import com.github.glodblock.epp.client.render.tesr.ExDriveTESR;
 import com.github.glodblock.epp.client.render.tesr.IngredientBufferTESR;
 import com.github.glodblock.epp.common.tileentities.TileExDrive;
 import com.github.glodblock.epp.common.tileentities.TileIngredientBuffer;
-import com.github.glodblock.epp.container.ContainerExDrive;
-import com.github.glodblock.epp.container.ContainerExIOBus;
-import com.github.glodblock.epp.container.ContainerExInterface;
-import com.github.glodblock.epp.container.ContainerExPatternProvider;
-import com.github.glodblock.epp.container.ContainerIngredientBuffer;
-import com.github.glodblock.epp.container.ContainerWirelessConnector;
+import com.github.glodblock.epp.container.*;
 import com.github.glodblock.epp.util.FCUtil;
 import com.google.common.collect.Sets;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -93,17 +81,17 @@ public class ClientRegistryHandler {
                 (menu, playerInv, title, style) -> new GuiWirelessConnector(menu, playerInv, title, style),
                 "/screens/wireless_connector.json"
         );
+        InitScreens.<AdvancedInterfaceTerminalMenu, AdvancedInterfaceTerminalScreen<AdvancedInterfaceTerminalMenu>>register(
+                AdvancedInterfaceTerminalMenu.TYPE,
+                (menu, playerInv, title, style) -> new AdvancedInterfaceTerminalScreen<>(menu, playerInv, title, style),
+                "/screens/pattern_access_terminal.json"
+        );
     }
 
     @SubscribeEvent
     public void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(FCUtil.getTileType(TileExDrive.class), ExDriveTESR::new);
         event.registerBlockEntityRenderer(FCUtil.getTileType(TileIngredientBuffer.class), IngredientBufferTESR::new);
-    }
-
-    @SubscribeEvent
-    public void registerModelLoaders(ModelRegistryEvent event) {
-        ModelLoaderRegistry.registerLoader(ResourceLocation.fromNamespaceAndPath(EPP.MODID, "ex_drive"), new Loader());
     }
 
     @SubscribeEvent
@@ -119,11 +107,17 @@ public class ClientRegistryHandler {
                         continue;
                     }
                     BakedModel newModel = new AutoRotatingBakedModel(orgModel);
-                    if (newModel != orgModel) {
+                    if (!newModel.equals(orgModel)) {
                         modelRegistry.put(location, newModel);
                     }
                 }
             }
         }
+    }
+
+    @SubscribeEvent
+    public void modelRegistryEvent(ModelRegistryEvent event) {
+        ModelLoaderRegistry.registerLoader(ResourceLocation.fromNamespaceAndPath(EPP.MODID, "ex_drive"),
+                new SimpleModelLoader<>(ExDriveModel::new));
     }
 }

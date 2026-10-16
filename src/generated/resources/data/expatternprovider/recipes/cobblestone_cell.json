@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CLC",
+    "WXW",
+    "III"
+  ],
+  "key": {
+    "C": {
+      "item": "ae2:quartz_glass"
+    },
+    "L": {
+      "item": "minecraft:lava_bucket"
+    },
+    "W": {
+      "item": "minecraft:water_bucket"
+    },
+    "X": {
+      "item": "ae2:cell_component_16k"
+    },
+    "I": {
+      "tag": "forge:gems/diamond"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:infinity_cell",
+    "nbt": "{record:{\"#c\":\"ae2:i\",id:\"minecraft:cobblestone\"}}"
+  }
+}

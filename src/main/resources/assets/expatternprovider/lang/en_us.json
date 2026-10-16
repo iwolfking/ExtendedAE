@@ -7,6 +7,7 @@
   "block.expatternprovider.ex_drive": "ME Extended Drive",
   "item.expatternprovider.ex_pattern_provider_part": "ME Extended Pattern Provider",
   "item.expatternprovider.ex_interface_part": "ME Extended Interface",
+  "item.expatternprovider.ex_pattern_access_terminal": "Extended Pattern Access Terminal",
   "item.expatternprovider.pattern_provider_upgrade": "Pattern Provider Upgrade",
   "item.expatternprovider.interface_upgrade": "Interface Upgrade",
   "item.expatternprovider.io_bus_upgrade": "Import/Export Bus Upgrade",

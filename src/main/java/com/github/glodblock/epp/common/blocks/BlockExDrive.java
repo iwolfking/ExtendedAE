@@ -1,37 +1,42 @@
 package com.github.glodblock.epp.common.blocks;
 
+import appeng.api.util.IOrientable;
+import appeng.block.AEBaseEntityBlock;
+import appeng.util.InteractionUtil;
 import com.github.glodblock.epp.common.tileentities.TileExDrive;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
 
-public class BlockExDrive extends BlockBaseGui<TileExDrive> {
+import javax.annotation.Nullable;
 
-    public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+public class BlockExDrive extends AEBaseEntityBlock<TileExDrive> {
 
-    public BlockExDrive(Properties properties) {
-        super(properties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+    public BlockExDrive() {
+        super(defaultProps(Material.METAL));
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder);
-        builder.add(FACING);
-    }
+    public InteractionResult onActivated(Level level, BlockPos pos, Player p,
+                                         InteractionHand hand,
+                                         @Nullable ItemStack heldItem, BlockHitResult hit) {
+        if (InteractionUtil.isInAlternateUseMode(p)) {
+            return InteractionResult.PASS;
+        }
 
-    @Override
-    public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
-    }
-
-    @Override
-    public void openGui(TileExDrive tile, Player p) {
-        tile.openMenu(p);
+        var be = this.getBlockEntity(level, pos);
+        if (be != null) {
+            if (!level.isClientSide()) {
+                be.openMenu(p);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide());
+        }
+        return InteractionResult.PASS;
     }
 }

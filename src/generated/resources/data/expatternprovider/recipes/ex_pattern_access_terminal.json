@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DW",
+    "C "
+  ],
+  "key": {
+    "D": {
+      "item": "ae2:pattern_access_terminal"
+    },
+    "W": {
+      "item": "ae2:capacity_card"
+    },
+    "C": {
+      "tag": "ae2:pattern_provider"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:ex_pattern_access_terminal"
+  }
+}

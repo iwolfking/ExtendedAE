@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "ae2:capacity_card"
+    },
+    {
+      "item": "ae2:capacity_card"
+    },
+    {
+      "item": "ae2:engineering_processor"
+    }
+  ],
+  "result": {
+    "item": "expatternprovider:pattern_provider_upgrade"
+  }
+}

@@ -1,6 +1,7 @@
 package com.github.glodblock.epp.common.tileentities;
 
 import appeng.api.storage.cells.CellState;
+import appeng.blockentity.AEBaseBlockEntity;
 import appeng.blockentity.storage.DriveBlockEntity;
 import appeng.core.AELog;
 import appeng.menu.ISubMenu;
@@ -8,9 +9,11 @@ import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import com.github.glodblock.epp.common.EPPItemAndBlock;
 import com.github.glodblock.epp.container.ContainerExDrive;
+import com.github.glodblock.epp.mixins.BaseAEBlockEntityAccessor;
 import com.github.glodblock.epp.util.Ae2Reflect;
 import com.github.glodblock.epp.util.FCUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
@@ -46,6 +49,11 @@ public class TileExDrive extends DriveBlockEntity {
         for (int i = 0; i < getCellCount(); i++) {
             data.writeVarInt(Registry.ITEM.getId(getCellItem(i)));
         }
+
+        if (this.canBeRotated()) {
+            final byte orientation = (byte) (this.getUp().ordinal() << 3 |  this.getForward().ordinal());
+            data.writeByte(orientation);
+        }
     }
 
     @Override
@@ -78,6 +86,17 @@ public class TileExDrive extends DriveBlockEntity {
                 Ae2Reflect.getCellItem(this)[i] = item;
                 changed = true;
             }
+        }
+
+        if (this.canBeRotated()) {
+            final Direction old_Forward = this.getForward();
+            final Direction old_Up = this.getUp();
+
+            final byte orientation = data.readByte();
+            ((BaseAEBlockEntityAccessor)(this)).setForward(Direction.values()[orientation & 0x7]);
+            ((BaseAEBlockEntityAccessor)(this)).setUp(Direction.values()[orientation >> 3]);
+
+            changed = changed || this.getForward() != old_Forward || this.getUp() != old_Up;
         }
 
         return changed;

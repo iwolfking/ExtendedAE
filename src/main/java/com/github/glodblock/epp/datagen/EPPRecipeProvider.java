@@ -6,6 +6,7 @@ import appeng.core.definitions.AEBlocks;
 import appeng.core.definitions.AEItems;
 import appeng.core.definitions.AEParts;
 import appeng.datagen.providers.tags.ConventionTags;
+import appeng.datagen.providers.tags.ItemTagsProvider;
 import com.github.glodblock.epp.EPP;
 import com.github.glodblock.epp.common.EPPItemAndBlock;
 import net.minecraft.data.DataGenerator;
@@ -195,6 +196,16 @@ public class EPPRecipeProvider extends RecipeProvider {
                 .define('E', AEItems.ENGINEERING_PROCESSOR)
                 .unlockedBy(C, has(EPPItemAndBlock.WIRELESS_CONNECTOR))
                 .save(c, EPP.id("wireless_connector"));
+
+        ShapedRecipeBuilder
+                .shaped(EPPItemAndBlock.EX_PATTERN_ACCESS_TERMINAL, 1)
+                .pattern("DW")
+                .pattern("C ")
+                .define('D', AEParts.PATTERN_ACCESS_TERMINAL)
+                .define('W', AEItems.CAPACITY_CARD)
+                .define('C', ConventionTags.PATTERN_PROVIDER)
+                .unlockedBy(C, has(AEParts.PATTERN_ACCESS_TERMINAL))
+                .save(c, EPP.id("ex_pattern_access_terminal"));
 
         ShapedRecipeBuilder
                 .shaped(EPPItemAndBlock.WIRELESS_TOOL)

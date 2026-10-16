@@ -7,10 +7,7 @@ import com.github.glodblock.epp.common.blocks.BlockExPatternProvider;
 import com.github.glodblock.epp.common.blocks.BlockIngredientBuffer;
 import com.github.glodblock.epp.common.blocks.BlockWirelessConnector;
 import com.github.glodblock.epp.common.items.*;
-import com.github.glodblock.epp.common.parts.PartExExportBus;
-import com.github.glodblock.epp.common.parts.PartExImportBus;
-import com.github.glodblock.epp.common.parts.PartExInterface;
-import com.github.glodblock.epp.common.parts.PartExPatternProvider;
+import com.github.glodblock.epp.common.parts.*;
 import com.github.glodblock.epp.common.tileentities.TileExDrive;
 import com.github.glodblock.epp.common.tileentities.TileExInterface;
 import com.github.glodblock.epp.common.tileentities.TileExPatternProvider;
@@ -35,6 +32,7 @@ public class EPPItemAndBlock {
 
     public static BlockExPatternProvider EX_PATTERN_PROVIDER;
     public static PartItem<PartExPatternProvider> EX_PATTERN_PROVIDER_PART;
+    public static PartItem<AdvancedPatternAccessTerminalPart> EX_PATTERN_ACCESS_TERMINAL;
     public static BlockExInterface EX_INTERFACE;
     public static PartItem<PartExInterface> EX_INTERFACE_PART;
     public static InfinityCell INFINITY_CELL;
@@ -54,6 +52,7 @@ public class EPPItemAndBlock {
     public static void init(RegistryHandler regHandler) {
         EX_PATTERN_PROVIDER = new BlockExPatternProvider();
         EX_PATTERN_PROVIDER_PART = new PartItem<>(new Item.Properties().tab(TAB), PartExPatternProvider.class, PartExPatternProvider::new);
+        EX_PATTERN_ACCESS_TERMINAL = new PartItem<>(new Item.Properties().tab(TAB), AdvancedPatternAccessTerminalPart.class, AdvancedPatternAccessTerminalPart::new);
         EX_INTERFACE = new BlockExInterface();
         EX_INTERFACE_PART = new PartItem<>(new Item.Properties().tab(TAB), PartExInterface.class, PartExInterface::new);
         INFINITY_CELL = new InfinityCell();
@@ -64,7 +63,7 @@ public class EPPItemAndBlock {
         PATTERN_PROVIDER_UPGRADE = new ItemPatternProviderUpgrade();
         PACKING_TAPE = new ItemMEPackingTape();
         PACKAGE = new ItemPackedDevice();
-        EX_DRIVE = new BlockExDrive(Block.Properties.of(net.minecraft.world.level.material.Material.METAL).strength(3.0F));
+        EX_DRIVE = new BlockExDrive();
         DRIVE_UPGRADE = new ItemDriveUpgrade();
         INGREDIENT_BUFFER = new BlockIngredientBuffer();
         WIRELESS_CONNECTOR = new BlockWirelessConnector();
@@ -76,6 +75,7 @@ public class EPPItemAndBlock {
         regHandler.block("wireless_connect", WIRELESS_CONNECTOR, TileWirelessConnector.class, TileWirelessConnector::new);
         regHandler.item("ex_pattern_provider_part", EX_PATTERN_PROVIDER_PART);
         regHandler.item("ex_interface_part", EX_INTERFACE_PART);
+        regHandler.item("ex_pattern_access_terminal", EX_PATTERN_ACCESS_TERMINAL);
         regHandler.item("pattern_provider_upgrade", PATTERN_PROVIDER_UPGRADE);
         regHandler.item("interface_upgrade", INTERFACE_UPGRADE);
         regHandler.item("io_bus_upgrade", IO_BUS_UPGRADE);

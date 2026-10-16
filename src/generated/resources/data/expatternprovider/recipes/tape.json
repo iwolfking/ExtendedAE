@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FG ",
+    "PIP",
+    " GF"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:ingots/iron"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "G": {
+      "item": "minecraft:slime_ball"
+    },
+    "F": {
+      "tag": "forge:dusts/fluix"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:me_packing_tape"
+  }
+}
