@@ -36,13 +36,10 @@ public class MixinPatternProviderLogic {
         at = @At("RETURN")
     )
     private void resizePatternInventory(IManagedGridNode mainNode, PatternProviderLogicHost host, CallbackInfo ci) {
-        EPP.LOGGER.info(host.getClass().toString());
         if (host instanceof IExtendedPatternProviderHost extendedHost) {
             int customSlots = extendedHost.getPatternSlotCount();
-            EPP.LOGGER.info(String.valueOf(customSlots));
 
             this.patternInventory = new AppEngInternalInventory((InternalInventoryHost) this, customSlots);
-            EPP.LOGGER.info(String.valueOf(this.patternInventory.size()));
 
             this.patternInventory.setFilter(new IAEItemFilter() {
                 @Override

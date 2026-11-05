@@ -9,7 +9,8 @@ public enum WirelessFail {
     OUT_OF_RANGE,
     SELF_REFERENCE,
     CROSS_DIMENSION,
-    MISSING;
+    MISSING,
+    OUT_OF_PORT;
 
     public Component getTranslation() {
         return new TranslatableComponent("chat.wireless_connect." + this.name().toLowerCase()).withStyle(ChatFormatting.RED);

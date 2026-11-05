@@ -1,18 +1,20 @@
 package com.github.glodblock.epp.common.blocks;
+import com.github.glodblock.epp.EPP;
 
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
-import com.github.glodblock.epp.EPP;
 import com.github.glodblock.epp.common.EPPItemAndBlock;
 import com.github.glodblock.epp.common.me.wireless.WirelessFail;
 import com.github.glodblock.epp.common.tileentities.TileWirelessConnector;
 import com.github.glodblock.epp.config.EPPConfig;
 import com.github.glodblock.epp.container.ContainerWirelessConnector;
+import com.github.glodblock.epp.util.WirelessHelpers;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -25,28 +27,32 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
-public class BlockWirelessConnector  extends BlockBaseGui<TileWirelessConnector> {
+public class BlockWirelessConnector extends BlockBaseGui<TileWirelessConnector> {
 
     private static final BooleanProperty CONNECTED = BooleanProperty.create("connected");
+    private static final IntegerProperty COLOR = IntegerProperty.create("color", 0, 16);
 
     public BlockWirelessConnector() {
         this.registerDefaultState(this.defaultBlockState().setValue(CONNECTED, false));
+        this.registerDefaultState(this.defaultBlockState().setValue(COLOR, 16));
     }
 
     @Override
     protected void createBlockStateDefinition(@Nonnull StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(CONNECTED);
+        builder.add(COLOR);
     }
 
     @Override
     protected BlockState updateBlockStateFromBlockEntity(BlockState currentState, TileWirelessConnector be) {
-        return currentState.setValue(CONNECTED, be.isConnected());
+        return currentState.setValue(CONNECTED, be.isConnected()).setValue(COLOR, be.getColor().ordinal());
     }
 
     @SuppressWarnings("deprecation")
@@ -71,64 +77,79 @@ public class BlockWirelessConnector  extends BlockBaseGui<TileWirelessConnector>
 
     @Override
     public InteractionResult check(TileWirelessConnector tile, ItemStack stack, Level world, BlockPos thisPos, BlockHitResult hit, Player p) {
-        if (stack.getItem() == EPPItemAndBlock.WIRELESS_TOOL && world instanceof ServerLevel server) {
-            var nbt = stack.hasTag() ? stack.getTag() : new CompoundTag();
-            assert nbt != null;
-            if (nbt.getLong("freq") != 0) {
-                var f = nbt.getLong("freq");
-                if (!nbt.contains("bind")) {
-                    p.displayClientMessage(WirelessFail.MISSING.getTranslation(), true);
-                    return InteractionResult.FAIL;
+        if (world instanceof ServerLevel) {
+            var item = stack.getItem();
+
+            if (item == EPPItemAndBlock.WIRELESS_TOOL) {
+                var nbt = stack.getOrCreateTag();
+
+                if (nbt.getLong("freq") != 0) {
+                    return WirelessHelpers.connectWireless(tile::setFrequency, nbt, world, thisPos, p, () -> stack.setTag(null));
+                } else {
+                    WirelessHelpers.bindWireless(nbt, tile.getNewFreq(), GlobalPos.of(world.dimension(), thisPos));
+                    p.displayClientMessage(new TranslatableComponent("chat.wireless_bind", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
+
+                    return InteractionResult.sidedSuccess(world.isClientSide);
                 }
-                var globalPos = GlobalPos.CODEC.decode(NbtOps.INSTANCE, nbt.get("bind"))
-                        .resultOrPartial(Util.prefix("Connector position", EPP.LOGGER::error))
-                        .map(Pair::getFirst)
-                        .orElse(null);
-                if (globalPos == null) {
-                    p.displayClientMessage(WirelessFail.MISSING.getTranslation(), true);
-                    return InteractionResult.FAIL;
-                }
-                var otherPos = globalPos.pos();
-                var otherWorld = globalPos.dimension();
-                var thisWorld = world.dimension();
-                if (otherPos.equals(thisPos) && otherWorld.equals(thisWorld)) {
-                    p.displayClientMessage(WirelessFail.SELF_REFERENCE.getTranslation(), true);
-                    return InteractionResult.FAIL;
-                }
-                if (!otherWorld.equals(thisWorld)) {
-                    p.displayClientMessage(WirelessFail.CROSS_DIMENSION.getTranslation(), true);
-                    return InteractionResult.FAIL;
-                }
-                if (Math.sqrt(otherPos.distSqr(thisPos)) > EPPConfig.wirelessMaxRange) {
-                    p.displayClientMessage(WirelessFail.OUT_OF_RANGE.getTranslation(), true);
-                    return InteractionResult.FAIL;
-                }
-                var otherWorldInstance = server.getServer().getLevel(otherWorld);
-                if (otherWorldInstance == null) {
-                    p.displayClientMessage(WirelessFail.MISSING.getTranslation(), true);
-                    return InteractionResult.FAIL;
-                }
-                var otherTile = otherWorldInstance.getBlockEntity(otherPos);
-                if (otherTile instanceof TileWirelessConnector otherConnector) {
-                    otherConnector.setFreq(f);
-                    tile.setFreq(f);
-                    stack.setTag(null);
-                    p.displayClientMessage(new TranslatableComponent("chat.wireless_connect", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
+            } else if (item == EPPItemAndBlock.WIRELESS_ADVANCED_TOOL) {
+                var nbt = stack.getOrCreateTag();
+
+                if (nbt.getBoolean("addMode")) {
+                    if (!nbt.contains("connections")) nbt.put("connections", new ListTag());
+
+                    var connections = nbt.getList("connections", CompoundTag.TAG_COMPOUND);
+
+                    if (connections.size() >= EPPConfig.wirelessMaxQueueSize) {
+                        p.displayClientMessage(new net.minecraft.network.chat.TranslatableComponent("chat.wireless_advanced_queue_limit", EPPConfig.wirelessMaxQueueSize), true);
+
+                        return InteractionResult.sidedSuccess(world.isClientSide);
+                    }
+
+                    var duplicate = false;
+
+                    for (int i = 0; i < connections.size(); i++) {
+                        var connection = connections.getCompound(i);
+
+                        if (!connection.contains("bind")) {
+                            continue;
+                        }
+
+                        var globalPos = GlobalPos.CODEC.decode(NbtOps.INSTANCE, connection.get("bind"))
+                            .resultOrPartial(Util.prefix("Connector position", EPP.LOGGER::error))
+                            .map(Pair::getFirst)
+                            .orElse(null);
+
+                        if (globalPos != null && globalPos.pos().equals(thisPos) && globalPos.dimension().equals(world.dimension())) {
+                            duplicate = true;
+
+                            break;
+                        }
+                    }
+
+                    if (duplicate) {
+                        p.displayClientMessage(new TranslatableComponent("chat.wireless_advanced_duplicate"), true);
+                    } else {
+                        CompoundTag newConnection = new CompoundTag();
+
+                        WirelessHelpers.bindWireless(newConnection, tile.getNewFreq(), GlobalPos.of(world.dimension(), thisPos));
+
+                        connections.add(newConnection);
+
+                        p.displayClientMessage(new TranslatableComponent("chat.wireless_added", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
+                    }
+
                     return InteractionResult.sidedSuccess(world.isClientSide);
                 } else {
-                    p.displayClientMessage(WirelessFail.MISSING.getTranslation(), true);
-                    return InteractionResult.FAIL;
+                    if (!nbt.contains("connections")) return InteractionResult.FAIL;
+
+                    var connections = nbt.getList("connections", CompoundTag.TAG_COMPOUND);
+                    var firstConnection = connections.getCompound(0);
+
+                    return WirelessHelpers.connectWireless(tile::setFrequency, firstConnection, world, thisPos, p, () -> connections.remove(0), () -> connections.remove(0));
                 }
-            } else {
-                stack.getOrCreateTag().putLong("freq", tile.getNewFreq());
-                var globalPos = GlobalPos.of(world.dimension(), thisPos);
-                GlobalPos.CODEC.encodeStart(NbtOps.INSTANCE, globalPos)
-                        .result()
-                        .ifPresent(tag -> stack.getOrCreateTag().put("bind", tag));
-                p.displayClientMessage(new TranslatableComponent("chat.wireless_bind", thisPos.getX(), thisPos.getY(), thisPos.getZ()), true);
-                return InteractionResult.sidedSuccess(world.isClientSide);
             }
         }
+
         return null;
     }
 

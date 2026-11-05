@@ -130,6 +130,7 @@ public class RegistryHandler {
         registerMenu(registry, ContainerExDrive.TYPE);
         registerMenu(registry, ContainerIngredientBuffer.TYPE);
         registerMenu(registry, ContainerWirelessConnector.TYPE);
+        registerMenu(registry, ContainerWirelessHub.TYPE);
         registerMenu(registry, AdvancedInterfaceTerminalMenu.TYPE);
     }
 
@@ -186,6 +187,7 @@ public class RegistryHandler {
         Upgrades.add(AEItems.INVERTER_CARD, EPPItemAndBlock.EX_IMPORT_BUS, 1, "group.ex_io_bus_part");
         Upgrades.add(AEItems.FUZZY_CARD, EPPItemAndBlock.EX_IMPORT_BUS, 1, "group.ex_io_bus_part");
         Upgrades.add(AEItems.ENERGY_CARD, EPPItemAndBlock.WIRELESS_CONNECTOR, 4, "gui.expatternprovider.wireless_connect");
+        Upgrades.add(AEItems.ENERGY_CARD, EPPItemAndBlock.WIRELESS_HUB, 4, "gui.expatternprovider.wireless_hub");
     }
 
     private void registerStorageHandler() {

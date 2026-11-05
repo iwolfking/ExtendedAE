@@ -1,28 +1,39 @@
 package com.github.glodblock.epp.common.tileentities;
 
+import appeng.api.implementations.blockentities.IColorableBlockEntity;
 import appeng.api.networking.GridFlags;
+import appeng.api.networking.IGridNode;
 import appeng.api.networking.IGridNodeListener;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.api.util.AECableType;
+import appeng.api.util.AEColor;
 import appeng.blockentity.ServerTickingBlockEntity;
 import appeng.blockentity.grid.AENetworkBlockEntity;
 import appeng.core.definitions.AEItems;
 import com.github.glodblock.epp.common.EPPItemAndBlock;
-import com.github.glodblock.epp.common.me.FreqGenerator;
 import com.github.glodblock.epp.common.me.wireless.WirelessConnect;
+import com.github.glodblock.epp.common.me.wireless.WirelessNode;
+import com.github.glodblock.epp.config.EPPConfig;
 import com.github.glodblock.epp.util.CacheHolder;
 import com.github.glodblock.epp.util.FCUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
+import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
 // Adapt from Quantum Bridge code
-public class TileWirelessConnector extends AENetworkBlockEntity implements ServerTickingBlockEntity, IUpgradeableObject {
+public class TileWirelessConnector extends AENetworkBlockEntity implements ServerTickingBlockEntity, IUpgradeableObject, IColorableBlockEntity, WirelessNode {
 
     private boolean updateStatus = true;
     private long freq = 0;
@@ -30,7 +41,8 @@ public class TileWirelessConnector extends AENetworkBlockEntity implements Serve
     private double powerUse;
     private final IUpgradeInventory upgrades;
     private final CacheHolder<BlockPos> other = CacheHolder.empty();
-    private static final FreqGenerator<Long> G = FreqGenerator.createLong();
+    @NotNull
+    private AEColor color = AEColor.TRANSPARENT;
 
     public TileWirelessConnector(BlockPos pos, BlockState blockState) {
         super(FCUtil.getTileType(TileWirelessConnector.class, TileWirelessConnector::new, EPPItemAndBlock.WIRELESS_CONNECTOR), pos, blockState);
@@ -54,21 +66,33 @@ public class TileWirelessConnector extends AENetworkBlockEntity implements Serve
         }
     }
 
+    @Override
+    public IGridNode getGridNode() {
+        return this.getMainNode().getNode();
+    }
+
     public void updatePowerUsage() {
-        var disc = 1 - 0.1 * this.upgrades.getInstalledUpgrades(AEItems.ENERGY_CARD);
+        var disc = 1 - this.calculateDisc();
         if (this.connect.isConnected()) {
             var dis = Math.max(this.connect.getDistance(), Math.E);
             this.powerUse = Math.max(1.0, dis * Math.log(dis) * disc);
+            this.powerUse *= EPPConfig.wirelessPowerMultiplier;
         } else {
-            this.powerUse = 1.0;
+            this.powerUse = EPPConfig.wirelessPowerMultiplier;
         }
         this.getMainNode().setIdlePowerUsage(this.powerUse);
+    }
+
+    private double calculateDisc() {
+        double disc = 0.1 * this.upgrades.getInstalledUpgrades(AEItems.ENERGY_CARD);
+        return disc;
     }
 
     public double getPowerUse() {
         return this.powerUse;
     }
 
+    @Nullable
     public BlockPos getOtherSide() {
         if (this.connect.isConnected()) {
             if (!this.other.isValid()) {
@@ -111,7 +135,13 @@ public class TileWirelessConnector extends AENetworkBlockEntity implements Serve
         super.loadTag(data);
         this.freq = data.getLong("freq");
         this.upgrades.readFromNBT(data, "upgrades");
-        G.markUsed(this.freq);
+        if (data.contains("color")) {
+            this.color = AEColor.valueOf(data.getString("color"));
+        } else {
+            this.color = AEColor.TRANSPARENT;
+        }
+        this.getMainNode().setGridColor(this.color);
+        WirelessConnect.G.markUsed(this.freq);
     }
 
     @Override
@@ -119,16 +149,17 @@ public class TileWirelessConnector extends AENetworkBlockEntity implements Serve
         super.saveAdditional(data);
         data.putLong("freq", this.freq);
         this.upgrades.writeToNBT(data, "upgrades");
-        G.markUsed(this.freq);
+        data.putString("color", this.color.name());
+        WirelessConnect.G.markUsed(this.freq);
     }
 
-    public void setFreq(long freq) {
+    public void setFrequency(long freq) {
         this.freq = freq;
         this.updateStatus = true;
     }
 
     public long getNewFreq() {
-        return G.genFreq();
+        return WirelessConnect.G.genFreq();
     }
 
     public void disconnect() {
@@ -153,8 +184,38 @@ public class TileWirelessConnector extends AENetworkBlockEntity implements Serve
     }
 
     @Override
+    public BlockEntity getBlockEntity() {
+        return this;
+    }
+
+    @Override
     public IUpgradeInventory getUpgrades() {
         return this.upgrades;
+    }
+
+    @Override
+    public void addAdditionalDrops(Level level, BlockPos pos, List<ItemStack> drops) {
+        super.addAdditionalDrops(level, pos, drops);
+        for (var card : this.upgrades) {
+            drops.add(card);
+        }
+    }
+
+    @Override
+    public @NotNull AEColor getColor() {
+        return this.color;
+    }
+
+    @Override
+    public boolean recolourBlock(Direction side, AEColor colour, Player who) {
+        if (colour == this.color) {
+            return false;
+        }
+        this.color = colour;
+        this.saveChanges();
+        this.markForUpdate();
+        this.getMainNode().setGridColor(this.color);
+        return true;
     }
 
 }

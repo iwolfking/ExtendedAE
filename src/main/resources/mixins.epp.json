@@ -5,13 +5,14 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "BaseAEBlockEntityAccessor",
-    "InterfaceTerminalPacketMixin",
     "MixinAEBasePart",
     "MixinInterfaceLogic",
     "MixinInterfaceTerminalMenu",
     "MixinPatternProviderLogic",
     "MixinPatternProviderMenu"
   ],
-  "client": [],
+  "client": [
+    "InterfaceTerminalPacketMixin"
+  ],
   "server": []
 }

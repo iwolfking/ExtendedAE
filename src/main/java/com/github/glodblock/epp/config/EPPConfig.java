@@ -33,6 +33,14 @@ public class EPPConfig {
             .comment("The max range between two wireless connector")
             .defineInRange("range", 1000.0, 10.0, 10000.0);
 
+    private static final ForgeConfigSpec.IntValue MAX_WIRELESS_QUENE = BUILDER
+            .comment("The max queue size for the ME Wireless Advanced Setup Kit")
+            .defineInRange("device.max_queue_size", 10, 10, 100);
+
+    private static final ForgeConfigSpec.DoubleValue WIRELESS_CONNECTOR_POWER_MULTIPLIER = BUILDER
+            .comment("Power usage multiplier for wireless connectors")
+            .defineInRange("device.wireless_connector_power_multiplier", 1.0, 0.0, 100.0);
+
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> INFINITY_CELL_TYPES = BUILDER
             .comment("ME Infinity Cell types (item or fluid's id)")
             .defineList("types", Lists.newArrayList("minecraft:water", "minecraft:cobblestone"), EPPConfig::checkRL);
@@ -61,6 +69,8 @@ public class EPPConfig {
     public static int busSpeed = 8;
     public static double infCellCost = 8.0;
     public static double wirelessMaxRange = 1000.0;
+    public static double wirelessPowerMultiplier = 1.0;
+    public static int wirelessMaxQueueSize = 10;
     public static List<Fluid> infCellFluid = Collections.emptyList();
     public static List<Item> infCellItem = Collections.emptyList();
     public static List<ResourceLocation> tapeWhitelist = Collections.emptyList();
@@ -70,6 +80,8 @@ public class EPPConfig {
         busSpeed = EX_BUS_SPEED.get();
         infCellCost = INFINITY_CELL_ENERGY.get();
         wirelessMaxRange = WIRELESS_CONNECTOR_RANGE.get();
+        wirelessPowerMultiplier = WIRELESS_CONNECTOR_POWER_MULTIPLIER.get();
+        wirelessMaxQueueSize = MAX_WIRELESS_QUENE.get();
 
         List<Fluid> fluids = new ArrayList<>();
         List<Item> items = new ArrayList<>();

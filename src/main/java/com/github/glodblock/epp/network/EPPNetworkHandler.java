@@ -3,6 +3,7 @@ package com.github.glodblock.epp.network;
 import appeng.core.sync.network.TargetPoint;
 import com.github.glodblock.epp.EPP;
 import com.github.glodblock.epp.network.packet.IMessage;
+import com.github.glodblock.epp.network.packet.PacketDisconnectWirelessHubPort;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -37,6 +38,7 @@ public class EPPNetworkHandler {
     private final Object2IntMap<Class<?>> packetIDMap = new Object2IntOpenHashMap<>();
 
     public EPPNetworkHandler() {
+        this.registerPacket(PacketDisconnectWirelessHubPort.class, PacketDisconnectWirelessHubPort::new);
         EventNetworkChannel ec = NetworkRegistry.ChannelBuilder.named(channel)
                 .networkProtocolVersion(() -> "1").clientAcceptedVersions(s -> true).serverAcceptedVersions(s -> true)
                 .eventNetworkChannel();

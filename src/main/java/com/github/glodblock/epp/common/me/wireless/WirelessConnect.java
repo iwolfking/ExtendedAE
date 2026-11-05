@@ -1,16 +1,14 @@
 package com.github.glodblock.epp.common.me.wireless;
+import com.github.glodblock.epp.EPP;
 
-import appeng.api.exceptions.FailedConnectionException;
 import appeng.api.features.Locatables;
 import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.security.IActionHost;
 import appeng.me.service.helpers.ConnectionWrapper;
-import com.github.glodblock.epp.EPP;
-import com.github.glodblock.epp.common.tileentities.TileWirelessConnector;
+import com.github.glodblock.epp.common.me.FreqGenerator;
 import com.github.glodblock.epp.config.EPPConfig;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.LevelEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -20,7 +18,8 @@ import java.util.Objects;
 
 public class WirelessConnect implements IActionHost {
 
-    private static final Locatables.Type<IActionHost> CONNECTORS = new Locatables.Type<>();
+    public static final FreqGenerator<Long> G = FreqGenerator.createLong();
+    private static final Locatables.Type<WirelessConnect> CONNECTORS = new Locatables.Type<>();
     private boolean isDestroyed = false;
     private boolean registered;
     private ConnectionWrapper connection;
@@ -28,9 +27,9 @@ public class WirelessConnect implements IActionHost {
     private long otherSide;
     private boolean shutdown;
     private double dis;
-    private TileWirelessConnector host;
+    private WirelessNode host;
 
-    public WirelessConnect(TileWirelessConnector connector) {
+    public WirelessConnect(WirelessNode connector) {
         this.host = connector;
         this.registered = true;
         MinecraftForge.EVENT_BUS.register(this);
@@ -38,7 +37,7 @@ public class WirelessConnect implements IActionHost {
 
     @SubscribeEvent
     public void onUnload(final WorldEvent.Unload e) {
-        if (this.host.getLevel() == e.getWorld()) {
+        if (this.host != null && this.host.getBlockEntity().getLevel() == e.getWorld()) {
             this.destroy();
         }
     }
@@ -53,7 +52,7 @@ public class WirelessConnect implements IActionHost {
         if (this.thisSide != f && this.thisSide != -f) {
             if (f != 0) {
                 if (this.thisSide != 0) {
-                    CONNECTORS.unregister(host.getLevel(), this.thisSide);
+                    CONNECTORS.unregister(host.getBlockEntity().getLevel(), this.thisSide);
                 }
                 if (this.canUseNode(-f)) {
                     this.otherSide = f;
@@ -62,25 +61,25 @@ public class WirelessConnect implements IActionHost {
                     this.thisSide = f;
                     this.otherSide = -f;
                 }
-                CONNECTORS.register(host.getLevel(), getLocatableKey(), this);
+                CONNECTORS.register(host.getBlockEntity().getLevel(), getLocatableKey(), this);
             } else {
-                CONNECTORS.unregister(host.getLevel(), getLocatableKey());
+                CONNECTORS.unregister(host.getBlockEntity().getLevel(), getLocatableKey());
                 this.otherSide = 0;
                 this.thisSide = 0;
             }
         }
 
-        var myOtherSide = this.otherSide == 0 ? null : CONNECTORS.get(host.getLevel(), this.otherSide);
+        var sideB = this.otherSide == 0 ? null : CONNECTORS.get(host.getBlockEntity().getLevel(), this.otherSide);
 
         this.shutdown = false;
         this.dis = 0;
 
-        if (myOtherSide instanceof WirelessConnect sideB) {
+        if (sideB != null) {
             var sideA = this;
-            this.dis = Math.sqrt(sideA.host.getBlockPos().distSqr(sideB.host.getBlockPos()));
+            this.dis = Math.sqrt(sideA.host.getBlockEntity().getBlockPos().distSqr(sideB.host.getBlockEntity().getBlockPos()));
             if (sideA.isActive() && sideB.isActive()
                     && this.dis <= EPPConfig.wirelessMaxRange
-                    && (sideA.host.getLevel() == sideB.host.getLevel())) {
+                    && (sideA.host.getBlockEntity().getLevel() == sideB.host.getBlockEntity().getLevel())) {
                 if (this.connection != null && this.connection.getConnection() != null) {
                     final IGridNode a = this.connection.getConnection().a();
                     final IGridNode b = this.connection.getConnection().b();
@@ -103,7 +102,7 @@ public class WirelessConnect implements IActionHost {
                     if (sideA.getNode() != null && sideB.getNode() != null) {
                         sideA.connection = sideB.connection = new ConnectionWrapper(GridHelper.createGridConnection(sideA.getNode(), sideB.getNode()));
                     }
-                } catch (IllegalStateException | FailedConnectionException e) {
+                } catch (IllegalStateException | appeng.api.exceptions.FailedConnectionException e) {
                     EPP.LOGGER.debug(e.getMessage());
                 }
             } else {
@@ -129,14 +128,14 @@ public class WirelessConnect implements IActionHost {
 
     @SuppressWarnings("deprecation")
     private boolean canUseNode(long qe) {
-        var locatable = CONNECTORS.get(host.getLevel(), qe);
-        if (locatable instanceof WirelessConnect qc) {
-            var world = qc.host.getLevel();
+        var qc = CONNECTORS.get(host.getBlockEntity().getLevel(), qe);
+        if (qc != null) {
+            var world = qc.host.getBlockEntity().getLevel();
             if (!qc.isDestroyed && world != null) {
-                if (world.hasChunkAt(qc.host.getBlockPos())) {
+                if (world.hasChunkAt(qc.host.getBlockEntity().getBlockPos())) {
                     final var cur = Objects.requireNonNull(world.getServer()).getLevel(world.dimension());
-                    final var te = world.getBlockEntity(qc.host.getBlockPos());
-                    return te != qc.host || world != cur;
+                    final var te = world.getBlockEntity(qc.host.getBlockEntity().getBlockPos());
+                    return te != qc.host.getBlockEntity() || world != cur;
                 } else {
                     EPP.LOGGER.warn(String.format("Found a registered Wireless Connector with serial %s whose chunk seems to be unloaded: %s", qe, qc));
                 }
@@ -150,8 +149,8 @@ public class WirelessConnect implements IActionHost {
         if (this.otherSide == 0) {
             return null;
         }
-        var o = CONNECTORS.get(this.host.getLevel(), this.otherSide);
-        return o instanceof WirelessConnect c ? c.host.getBlockPos() : null;
+        var connect = CONNECTORS.get(this.host.getBlockEntity().getLevel(), this.otherSide);
+        return connect != null ? connect.host.getBlockEntity().getBlockPos() : null;
     }
 
     private boolean isActive() {
@@ -174,6 +173,7 @@ public class WirelessConnect implements IActionHost {
             return;
         }
         this.isDestroyed = true;
+        this.shutdown = true;
         try {
             if (this.registered) {
                 MinecraftForge.EVENT_BUS.unregister(this);
@@ -182,7 +182,7 @@ public class WirelessConnect implements IActionHost {
 
             if (this.thisSide != 0) {
                 this.updateStatus();
-                CONNECTORS.unregister(host.getLevel(), getLocatableKey());
+                CONNECTORS.unregister(host.getBlockEntity().getLevel(), getLocatableKey());
             }
             this.host = null;
         } catch (Exception ignore) {
@@ -195,7 +195,7 @@ public class WirelessConnect implements IActionHost {
 
     @Override
     public IGridNode getActionableNode() {
-        return host.getMainNode().getNode();
+        return this.host.getGridNode();
     }
 
 }

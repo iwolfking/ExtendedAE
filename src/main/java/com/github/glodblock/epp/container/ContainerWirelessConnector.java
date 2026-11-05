@@ -16,7 +16,7 @@ public class ContainerWirelessConnector extends UpgradeableMenu<TileWirelessConn
 
     private final TileWirelessConnector connector;
     @GuiSync(7)
-    public double powerUse;
+    public int powerUse;
     @GuiSync(8)
     public int usedChannel;
     @GuiSync(9)
@@ -33,7 +33,7 @@ public class ContainerWirelessConnector extends UpgradeableMenu<TileWirelessConn
 
     @Override
     public void broadcastChanges() {
-        this.powerUse = this.connector.getPowerUse();
+        this.powerUse = (int) (this.connector.getPowerUse() * 100);
         var node = this.connector.getMainNode().getNode();
         if (node != null) {
             this.usedChannel = node.getUsedChannels();

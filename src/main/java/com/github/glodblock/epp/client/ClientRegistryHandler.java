@@ -81,6 +81,11 @@ public class ClientRegistryHandler {
                 (menu, playerInv, title, style) -> new GuiWirelessConnector(menu, playerInv, title, style),
                 "/screens/wireless_connector.json"
         );
+        InitScreens.<ContainerWirelessHub, GuiWirelessHub>register(
+                ContainerWirelessHub.TYPE,
+                (menu, playerInv, title, style) -> new GuiWirelessHub(menu, playerInv, title, style),
+                "/screens/wireless_hub.json"
+        );
         InitScreens.<AdvancedInterfaceTerminalMenu, AdvancedInterfaceTerminalScreen<AdvancedInterfaceTerminalMenu>>register(
                 AdvancedInterfaceTerminalMenu.TYPE,
                 (menu, playerInv, title, style) -> new AdvancedInterfaceTerminalScreen<>(menu, playerInv, title, style),

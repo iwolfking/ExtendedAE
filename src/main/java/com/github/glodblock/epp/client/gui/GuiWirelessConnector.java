@@ -44,7 +44,7 @@ public class GuiWirelessConnector extends UpgradeableScreen<ContainerWirelessCon
         );
         this.font.draw(
                 poseStack,
-                new TranslatableComponent("gui.wireless_connect.power", String.format("%.2f", this.menu.powerUse)),
+                new TranslatableComponent("gui.wireless_connect.power", String.format("%.2f", this.menu.powerUse / 100f)),
                 PADDING_X,
                 PADDING_Y + len * 2,
                 textColor
