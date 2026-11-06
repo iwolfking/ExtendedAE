@@ -100,7 +100,6 @@ public class PartPreciseExportBus extends ExportBusPart {
     @SuppressWarnings("UnstableApiUsage")
     @Override
     protected boolean doBusWork(IGrid grid) {
-        EPP.LOGGER.info("Precise bus doBusWork start. grid=" + (grid != null));
         var storageService = grid.getStorageService();
         var cg = grid.getCraftingService();
         var schedulingMode = this.getConfigManager().getSetting(Settings.SCHEDULING_MODE);
@@ -111,7 +110,6 @@ public class PartPreciseExportBus extends ExportBusPart {
         for (x = 0; x < this.availableSlots() && context.hasOperationsLeft(); x++) {
             final int slotToExport = this.getStartingSlot(schedulingMode, x);
             var stack = getConfig().getStack(slotToExport);
-            EPP.LOGGER.info("Precise bus slot=" + slotToExport + " stack=" + stack);
 
             if (stack == null) {
                 continue;
@@ -130,15 +128,9 @@ public class PartPreciseExportBus extends ExportBusPart {
 
             long before = context.getOperationsRemaining();
             long extracted = simulateExtract(context, what, amount);
-            EPP.LOGGER.info("Precise bus before=" + before + " extracted=" + extracted + " amount=" + amount);
-            if (before < Math.max(1, amount / transferFactor)) {
-                EPP.LOGGER.info("Precise bus early skip before<TF");
-                continue;
-            }
 
             long ceil = this.useExactAmount() ? extracted : (simulateExtract(context, what, before * transferFactor) / amount * amount);
             long pushedSim = getExportStrategy().push(what, ceil, Actionable.SIMULATE);
-            EPP.LOGGER.info("Precise bus ceil=" + ceil + " pushedSim=" + pushedSim);
             long canHold = pushedSim / amount * amount;
             if (canHold > 0) {
                 var realSend = getExportStrategy().transfer(context, what, canHold, Actionable.MODULATE);
@@ -157,8 +149,6 @@ public class PartPreciseExportBus extends ExportBusPart {
             this.updateSchedulingMode(schedulingMode, x);
         }
 
-        EPP.LOGGER.info("Precise bus done hasDoneWork=" + context.hasDoneWork() + " opsLeft=" + context.getOperationsRemaining());
-        EPP.LOGGER.info("Precise bus availableSlots=" + this.availableSlots());
         return context.hasDoneWork();
     }
 
