@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["PBP"],
+  "key": {
+    "P": {"item": "ae2:calculation_processor"},
+    "B": {"item": "expatternprovider:ex_export_bus_part"}
+  },
+  "result": {"item": "expatternprovider:precise_export_bus", "count": 1}
+}

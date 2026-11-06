@@ -1,0 +1,191 @@
+package com.github.glodblock.epp.common.me;
+
+import appeng.api.networking.security.IActionSource;
+import appeng.api.networking.ticking.TickRateModulation;
+import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.AEKey;
+import appeng.api.stacks.GenericStack;
+import appeng.api.stacks.KeyCounter;
+import appeng.blockentity.AEBaseBlockEntity;
+import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
+import appeng.crafting.pattern.AECraftingPattern;
+import appeng.items.misc.WrappedGenericStack;
+import com.github.glodblock.epp.common.tileentities.matrix.TileAssemblerMatrixCrafter;
+import com.github.glodblock.epp.util.Ae2Reflect;
+import com.github.glodblock.epp.util.helper.CraftingRecipePattern;
+import com.github.glodblock.epp.util.helper.IntruderInventory;
+import com.github.glodblock.epp.util.SingleThreadLRU;
+import it.unimi.dsi.fastutil.Pair;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
+
+public class CraftingMatrixThread extends CraftingThread {
+
+    private static final SingleThreadLRU<AEItemKey, SearchResult> LRU = new SingleThreadLRU<>(new Object2ObjectOpenHashMap<>(100), 100);
+    private final BiConsumer<AEKey, Long> pusher;
+
+    public CraftingMatrixThread(@NotNull AEBaseBlockEntity host, @NotNull Supplier<IActionSource> sourceGetter, SignalAccepter accepter) {
+        super(host, accepter);
+        this.pusher = ((TileAssemblerMatrixCrafter) host)::addToBuffer;
+    }
+
+    @Override
+    protected boolean hasMats() {
+        if (this.myPlan == null) {
+            return false;
+        }
+        return !this.gridInv.isEmpty();
+    }
+
+    @Override
+    protected void ejectHeldItems() {
+        boolean changed = false;
+        for (int x = 0; x < 10; x ++) {
+            var stack = this.gridInv.getStackInSlot(x);
+            if (!stack.isEmpty()) {
+                if (stack.getItem() instanceof WrappedGenericStack) {
+                    var generic = GenericStack.unwrapItemStack(stack);
+                    if (generic != null) {
+                        this.pusher.accept(generic.what(), generic.amount());
+                    }
+                } else {
+                    this.pusher.accept(AEItemKey.of(stack), (long) stack.getCount());
+                }
+                changed = true;
+                // The buffer can hold anything
+                this.gridInv.setItemDirect(x, ItemStack.EMPTY);
+            }
+        }
+        if (changed) {
+            this.saveChanges();
+        }
+    }
+
+    @Override
+    protected TickRateModulation onCraftingDone() {
+        if (this.myPlan instanceof AECraftingPattern cp) {
+            if (cp.canSubstitute) {
+                return super.onCraftingDone();
+            } else {
+                var cache = LRU.get(cp.getDefinition());
+                if (cache != null && cache.isValid()) {
+                    this.progress = 0;
+                    ((IntruderInventory) this.gridInv).silentClear();
+                    this.output = cache.output;
+                    this.pusher.accept(cache.outputKey, (long) cache.amount);
+                    for (var stack : cache.remains) {
+                        this.pusher.accept(stack.what(), stack.amount());
+                    }
+                    this.reset();
+                    return this.isAwake ? TickRateModulation.IDLE : TickRateModulation.SLEEP;
+                } else {
+                    return super.onCraftingDone();
+                }
+            }
+        } else {
+            return super.onCraftingDone();
+        }
+    }
+
+    @Override
+    protected ItemStack assemblePattern(CraftingContainer input) {
+        if (this.myPlan instanceof AECraftingPattern crafting) {
+            if (crafting.canSubstitute) {
+                return super.assemblePattern(input);
+            }
+            return ((CraftingRecipePattern) crafting).getOutput();
+        }
+        return super.assemblePattern(input);
+    }
+
+    @Override
+    protected void pushOut(ItemStack output) {
+        if (!output.isEmpty()) {
+            this.pusher.accept(AEItemKey.of(output), (long) output.getCount());
+        }
+        if (this.forcePlan) {
+            this.forcePlan = false;
+            this.recalculatePlan();
+        }
+        this.gridInv.setItemDirect(9, ItemStack.EMPTY);
+    }
+
+    @Override
+    public void fillGrid(KeyCounter[] table, IMolecularAssemblerSupportedPattern adapter) {
+        if (adapter instanceof AECraftingPattern cp) {
+            if (cp.canSubstitute) {
+                super.fillGrid(table, cp);
+            } else {
+                var cache = LRU.get(cp.getDefinition());
+                if (cache != null && cache.isValid()) {
+                    this.fillGridFromArray(cache);
+                    return;
+                }
+                if (cache != null) {
+                    // Force to fail
+                    super.fillGrid(table, cp);
+                    return;
+                }
+                LRU.put(cp.getDefinition(), this.makeResult(table, cp));
+            }
+        } else {
+            super.fillGrid(table, adapter);
+        }
+    }
+
+    private SearchResult makeResult(KeyCounter[] table, AECraftingPattern pattern) {
+        // Make the cache
+        super.fillGrid(table, pattern);
+        ItemStack[] inputClone = new ItemStack[9];
+        for (int i = 0; i < 9; i++) {
+            inputClone[i] = this.gridInv.getStackInSlot(i).copy();
+        }
+        var outputs = this.getPatternOutput(pattern);
+        if (outputs == null) {
+            return SearchResult.NULL;
+        }
+        return new SearchResult(inputClone, outputs.first(), outputs.second(), AEItemKey.of(outputs.second()), outputs.second().getCount());
+    }
+
+    private Pair<List<GenericStack>, ItemStack> getPatternOutput(AECraftingPattern pattern) {
+        for (int x = 0; x < this.craftingInv.getContainerSize(); x++) {
+            this.craftingInv.setItem(x, this.gridInv.getStackInSlot(x));
+        }
+        var output = this.assemblePattern(this.craftingInv);
+        if (!output.isEmpty()) {
+            List<GenericStack> left = new ArrayList<>();
+            for (var stack : pattern.getRemainingItems(this.craftingInv)) {
+                if (stack != null && !stack.isEmpty()) {
+                    var gs = GenericStack.fromItemStack(stack);
+                    if (gs != null) {
+                        left.add(gs);
+                    }
+                }
+            }
+            return Pair.of(left, output);
+        }
+        return null;
+    }
+
+    private void fillGridFromArray(SearchResult result) {
+        ((IntruderInventory) this.gridInv).setStacks(result.results);
+    }
+
+    private record SearchResult(ItemStack[] results, List<GenericStack> remains, ItemStack output, AEItemKey outputKey, int amount) {
+
+        static SearchResult NULL = new SearchResult(null, null, null, null, 0);
+
+        boolean isValid() {
+            return this != NULL && this.results != null;
+        }
+
+    }
+
+}

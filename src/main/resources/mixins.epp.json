@@ -9,7 +9,9 @@
     "MixinInterfaceLogic",
     "MixinInterfaceTerminalMenu",
     "MixinPatternProviderLogic",
-    "MixinPatternProviderMenu"
+    "MixinPatternProviderMenu",
+    "MixinAECraftingPattern",
+    "MixinAppEngInternalInventory"
   ],
   "client": [
     "InterfaceTerminalPacketMixin"

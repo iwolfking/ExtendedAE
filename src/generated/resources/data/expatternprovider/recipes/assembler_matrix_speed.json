@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["BIB","BGB","BIB"],
+  "key": {
+    "B": {"item": "ae2:red_lumen_paint_ball"},
+    "I": {"item": "ae2:speed_card"},
+    "G": {"item": "expatternprovider:assembler_matrix_wall"}
+  },
+  "result": {"item": "expatternprovider:assembler_matrix_speed", "count": 2}
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["BIB","IGI","BIB"],
+  "key": {
+    "B": {"tag": "ae2:smart_cable"},
+    "I": {"item": "ae2:quartz_glass"},
+    "G": {"item": "ae2:logic_processor"}
+  },
+  "result": {"item": "expatternprovider:assembler_matrix_glass", "count": 2}
+}

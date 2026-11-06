@@ -9,5 +9,9 @@ public class EPPIcon {
     private static final ResourceLocation TEXTURE = EPP.id("textures/guis/nicons.png");
 
     public static final Blitter INFO = Blitter.texture(TEXTURE, 64, 64).src(0, 0, 16, 16);
+    public static final Blitter EXACT = Blitter.texture(TEXTURE, 64, 64).src(32, 32, 16, 16);
+    public static final Blitter BATCH = Blitter.texture(TEXTURE, 64, 64).src(48, 32, 16, 16);
+    public static final Blitter LEFT = Blitter.texture(TEXTURE, 64, 64).src(32, 0, 16, 16);
+    public static final Blitter RIGHT = Blitter.texture(TEXTURE, 64, 64).src(48, 0, 16, 16);
 
 }

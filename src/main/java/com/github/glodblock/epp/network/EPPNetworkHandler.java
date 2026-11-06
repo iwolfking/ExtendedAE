@@ -3,6 +3,11 @@ package com.github.glodblock.epp.network;
 import appeng.core.sync.network.TargetPoint;
 import com.github.glodblock.epp.EPP;
 import com.github.glodblock.epp.network.packet.IMessage;
+import com.github.glodblock.epp.network.packet.CGenericPacket;
+import com.github.glodblock.epp.network.packet.CUpdatePage;
+import com.github.glodblock.epp.network.packet.SGenericPacket;
+import com.github.glodblock.epp.network.packet.SAssemblerMatrixUpdate;
+import com.github.glodblock.epp.network.packet.SAssemblerAnimation;
 import com.github.glodblock.epp.network.packet.PacketDisconnectWirelessHubPort;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -39,6 +44,11 @@ public class EPPNetworkHandler {
 
     public EPPNetworkHandler() {
         this.registerPacket(PacketDisconnectWirelessHubPort.class, PacketDisconnectWirelessHubPort::new);
+        this.registerPacket(CGenericPacket.class, CGenericPacket::new);
+        this.registerPacket(CUpdatePage.class, CUpdatePage::new);
+        this.registerPacket(SGenericPacket.class, SGenericPacket::new);
+        this.registerPacket(SAssemblerMatrixUpdate.class, SAssemblerMatrixUpdate::new);
+        this.registerPacket(SAssemblerAnimation.class, SAssemblerAnimation::new);
         EventNetworkChannel ec = NetworkRegistry.ChannelBuilder.named(channel)
                 .networkProtocolVersion(() -> "1").clientAcceptedVersions(s -> true).serverAcceptedVersions(s -> true)
                 .eventNetworkChannel();

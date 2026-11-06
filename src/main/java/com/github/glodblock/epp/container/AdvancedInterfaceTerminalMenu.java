@@ -26,6 +26,7 @@ import appeng.util.inv.filter.IAEItemFilter;
 import com.github.glodblock.epp.common.parts.AdvancedPatternAccessTerminalPart;
 import com.github.glodblock.epp.common.parts.PartExPatternProvider;
 import com.github.glodblock.epp.common.tileentities.TileExPatternProvider;
+import com.github.glodblock.epp.common.tileentities.matrix.TileAssemblerMatrixPattern;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -54,7 +55,7 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
     // We use this serial number to uniquely identify all inventories we send to the client
     // It is used in packets sent by the client to interact with these inventories
     private static long inventorySerial = Integer.MIN_VALUE;
-    private final Map<PatternProviderLogicHost, List<InvTracker>> diList = new IdentityHashMap<>();
+    private final Map<Object, List<InvTracker>> diList = new IdentityHashMap<>();
     private final Long2ObjectOpenHashMap<InvTracker> byId = new Long2ObjectOpenHashMap<>();
     /**
      * Tracks hosts that were visible before, even if they no longer match the filter. For
@@ -97,6 +98,7 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
             visitInterfaceHosts(grid, PatternProviderPart.class, state);
             visitInterfaceHosts(grid, TileExPatternProvider.class, state);
             visitInterfaceHosts(grid, PartExPatternProvider.class, state);
+            visitMatrixPatterns(grid, state);
 
             // Ensure we don't keep references to removed hosts
             pinnedHosts.removeIf(host -> host.getLogic().getGrid() != grid);
@@ -261,18 +263,52 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         }
     }
 
+    private void visitMatrixPatterns(IGrid grid, VisitorState state) {
+        for (var ih : grid.getActiveMachines(TileAssemblerMatrixPattern.class)) {
+            boolean isVisible = ih.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
+            if (getShownProviders() == ShowPatternProviders.VISIBLE && !isVisible) {
+                continue;
+            }
+            if (getShownProviders() == ShowPatternProviders.NOT_FULL && !isVisible) {
+                continue;
+            }
+            for (InvTracker t : this.diList.getOrDefault(ih, java.util.Collections.emptyList())) {
+                if (t == null || !t.name.equals(new net.minecraft.network.chat.TranslatableComponent("block.expatternprovider.assembler_matrix_pattern"))) {
+                    state.forceFullUpdate = true;
+                }
+            }
+            state.total++;
+        }
+    }
+
     private void addPatternProvider(IGrid grid ,Class<? extends PatternProviderLogicHost> clazz) {
         for (var ih : grid.getActiveMachines(clazz)) {
             var dual = ih.getLogic();
             if (isHostVisible(ih)) {
                 List<InvTracker> list = this.diList.computeIfAbsent(ih, i -> new ArrayList<>());
                 for (int i = 0; i < ih.getLogic().getPatternInv().size() / 9; i++) {
-                    list.add(new InvTracker(dual, dual.getPatternInv(), dual.getTermName(), i));
+                    list.add(new InvTracker(dual.getPatternInv(), dual.getTermName(), i));
                 }
             }
         }
     }
 
+
+    private void addMatrixProvider(IGrid grid) {
+        for (var ih : grid.getActiveMachines(TileAssemblerMatrixPattern.class)) {
+            boolean isVisible = ih.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
+            if (getShownProviders() == ShowPatternProviders.VISIBLE && !isVisible) {
+                continue;
+            }
+            if (getShownProviders() == ShowPatternProviders.NOT_FULL && !isVisible) {
+                continue;
+            }
+            List<InvTracker> list = this.diList.computeIfAbsent(ih, i -> new ArrayList<>());
+            for (int i = 0; i < ih.getPatternInventory().size() / 9; i++) {
+                list.add(new InvTracker(ih.getPatternInventory(), new net.minecraft.network.chat.TranslatableComponent("block.expatternprovider.assembler_matrix_pattern"), i));
+            }
+        }
+    }
 
     private void sendFullUpdate(@Nullable IGrid grid) {
         this.byId.clear();
@@ -288,6 +324,7 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         addPatternProvider(grid, PatternProviderPart.class);
         addPatternProvider(grid, TileExPatternProvider.class);
         addPatternProvider(grid, PartExPatternProvider.class);
+        addMatrixProvider(grid);
 
         for (var list : this.diList.values()) {
             for (var inv : list) {
@@ -363,11 +400,11 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         private final InternalInventory server;
         private final int line;
 
-        public InvTracker(PatternProviderLogic dual, InternalInventory patterns, Component name, int line) {
+        public InvTracker(InternalInventory patterns, Component name, int line) {
             this.server = patterns;
             this.client = new AppEngInternalInventory(9);
             this.name = name;
-            this.sortBy = dual.getSortValue();
+            this.sortBy = 0;
             this.serverId = ((inventorySerial++) << 32) | line;
             this.line = line;
         }

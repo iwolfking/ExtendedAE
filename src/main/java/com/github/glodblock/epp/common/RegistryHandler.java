@@ -123,6 +123,9 @@ public class RegistryHandler {
     }
 
     private void onRegisterContainer(IForgeRegistry<MenuType<?>> registry) {
+        registerMenu(registry, ContainerAssemblerMatrix.TYPE);
+        registerMenu(registry, ContainerExMolecularAssembler.TYPE);
+        registerMenu(registry, ContainerPreciseExportBus.TYPE);
         registerMenu(registry, ContainerExPatternProvider.TYPE);
         registerMenu(registry, ContainerExInterface.TYPE);
         registerMenu(registry, ContainerExIOBus.EXPORT_TYPE);
@@ -199,6 +202,7 @@ public class RegistryHandler {
         PartModels.registerModels(PartExPatternProvider.MODELS);
         PartModels.registerModels(PartExInterface.MODELS);
         PartModels.registerModels(PartExExportBus.MODELS);
+        PartModels.registerModels(PartPreciseExportBus.MODELS);
         PartModels.registerModels(PartExImportBus.MODELS);
         PartModels.registerModels(PartModelsHelper.createModels(AdvancedPatternAccessTerminalPart.class));
     }

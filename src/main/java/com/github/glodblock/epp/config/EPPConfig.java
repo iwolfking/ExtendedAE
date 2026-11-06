@@ -71,6 +71,7 @@ public class EPPConfig {
     public static double wirelessMaxRange = 1000.0;
     public static double wirelessPowerMultiplier = 1.0;
     public static int wirelessMaxQueueSize = 10;
+    public static int assemblerMatrixSize = 7;
     public static List<Fluid> infCellFluid = Collections.emptyList();
     public static List<Item> infCellItem = Collections.emptyList();
     public static List<ResourceLocation> tapeWhitelist = Collections.emptyList();

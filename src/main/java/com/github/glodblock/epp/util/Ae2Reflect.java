@@ -2,8 +2,12 @@ package com.github.glodblock.epp.util;
 
 import appeng.api.storage.cells.CellState;
 import appeng.blockentity.misc.InterfaceBlockEntity;
+import appeng.api.behaviors.StackTransferContext;
 import appeng.blockentity.storage.DriveBlockEntity;
+import appeng.api.networking.storage.IStorageService;
+import appeng.api.networking.energy.IEnergyService;
 import appeng.helpers.InterfaceLogic;
+import appeng.parts.automation.ExportBusPart;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.phys.BlockHitResult;
@@ -16,6 +20,7 @@ import java.util.Arrays;
 public class Ae2Reflect {
 
     private static final Field fInterfaceBlockEntity_logic;
+    private static Method mExportBusPart_createTransferContext;
     private static final Field fUseOnContext_hitResult;
     private static final Field fDriveBlockEntity_clientSideCellState;
     private static final Field fDriveBlockEntity_clientSideCellItems;
@@ -30,6 +35,10 @@ public class Ae2Reflect {
             fDriveBlockEntity_clientSideCellItems = reflectField(DriveBlockEntity.class, "clientSideCellItems");
             fDriveBlockEntity_clientSideOnline = reflectField(DriveBlockEntity.class, "clientSideOnline");
             mDriveBlockEntity_updateClientSideState = reflectMethod(DriveBlockEntity.class, "updateClientSideState");
+            try {
+                mExportBusPart_createTransferContext = reflectMethod(ExportBusPart.class, new String[]{"createTransferContext"}, IStorageService.class, IEnergyService.class);
+            } catch (Exception ignore) {
+            }
         } catch (Exception e) {
             throw new IllegalStateException("Failed to initialize AE2 reflection hacks!", e);
         }
@@ -124,4 +133,12 @@ public class Ae2Reflect {
         return Ae2Reflect.readField(owner, fDriveBlockEntity_clientSideCellItems);
     }
 
+
+    public static StackTransferContext getExportContext(ExportBusPart owner, IStorageService storageService, IEnergyService energyService) {
+        try {
+            return (StackTransferContext) mExportBusPart_createTransferContext.invoke(owner, storageService, energyService);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to invoke createTransferContext", e);
+        }
+    }
 }

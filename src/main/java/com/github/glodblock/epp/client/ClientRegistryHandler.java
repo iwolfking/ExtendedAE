@@ -10,7 +10,9 @@ import com.github.glodblock.epp.client.model.AERotatableBlocks;
 import com.github.glodblock.epp.client.model.ExDriveModel;
 import com.github.glodblock.epp.client.render.tesr.ExDriveTESR;
 import com.github.glodblock.epp.client.render.tesr.IngredientBufferTESR;
+import com.github.glodblock.epp.client.render.tesr.ExMolecularAssemblerTESR;
 import com.github.glodblock.epp.common.tileentities.TileExDrive;
+import com.github.glodblock.epp.common.tileentities.TileExMolecularAssembler;
 import com.github.glodblock.epp.common.tileentities.TileIngredientBuffer;
 import com.github.glodblock.epp.container.*;
 import com.github.glodblock.epp.util.FCUtil;
@@ -18,6 +20,8 @@ import com.google.common.collect.Sets;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -36,16 +40,36 @@ public class ClientRegistryHandler {
     public void init() {
         this.registerSemantic();
         this.registerGui();
-    }
+        ItemBlockRenderTypes.setRenderLayer(com.github.glodblock.epp.common.EPPItemAndBlock.ASSEMBLER_MATRIX_GLASS, RenderType.translucent());
+        ItemBlockRenderTypes.setRenderLayer(com.github.glodblock.epp.common.EPPItemAndBlock.EX_ASSEMBLER, RenderType.cutout());    }
 
     public void registerSemantic() {
         ExSemantics.EX_1 = SlotSemantics.register("EX_1", false);
         ExSemantics.EX_2 = SlotSemantics.register("EX_2", false);
         ExSemantics.EX_3 = SlotSemantics.register("EX_3", false);
         ExSemantics.EX_4 = SlotSemantics.register("EX_4", false);
+        ExSemantics.EX_5 = SlotSemantics.register("EX_5", false);
+        ExSemantics.EX_6 = SlotSemantics.register("EX_6", false);
+        ExSemantics.EX_7 = SlotSemantics.register("EX_7", false);
+        ExSemantics.EX_8 = SlotSemantics.register("EX_8", false);
     }
 
     public void registerGui() {
+        InitScreens.<ContainerAssemblerMatrix, GuiAssemblerMatrix>register(
+                ContainerAssemblerMatrix.TYPE,
+                (menu, playerInv, title, style) -> new GuiAssemblerMatrix(menu, playerInv, title, style),
+                "/screens/assembler_matrix.json"
+        );
+        InitScreens.<ContainerExMolecularAssembler, GuiExMolecularAssembler>register(
+                ContainerExMolecularAssembler.TYPE,
+                (menu, playerInv, title, style) -> new GuiExMolecularAssembler(menu, playerInv, title, style),
+                "/screens/ex_molecular_assembler.json"
+        );
+        InitScreens.<ContainerPreciseExportBus, GuiPreciseExportBus>register(
+                ContainerPreciseExportBus.TYPE,
+                (menu, playerInv, title, style) -> new GuiPreciseExportBus(menu, playerInv, title, style),
+                "/screens/precise_export_bus.json"
+        );
         InitScreens.<ContainerExPatternProvider, GuiExPatternProvider>register(
                 ContainerExPatternProvider.TYPE,
                 GuiExPatternProvider::new,
@@ -96,6 +120,7 @@ public class ClientRegistryHandler {
     @SubscribeEvent
     public void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(FCUtil.getTileType(TileExDrive.class), ExDriveTESR::new);
+        event.registerBlockEntityRenderer(FCUtil.getTileType(TileExMolecularAssembler.class), ExMolecularAssemblerTESR::new);
         event.registerBlockEntityRenderer(FCUtil.getTileType(TileIngredientBuffer.class), IngredientBufferTESR::new);
     }
 
