@@ -108,4 +108,11 @@ public class FCUtil {
         return false;
     }
 
+    public static String[] trimSplit(String str) {
+        var sp = str.split(",");
+        for (int i = 0; i < sp.length; i ++) {
+            sp[i] = sp[i].trim();
+        }
+        return sp;
+    }
 }

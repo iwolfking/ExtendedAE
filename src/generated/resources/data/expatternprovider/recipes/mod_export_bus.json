@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " C ",
+    "RBR",
+    " K "
+  ],
+  "key": {
+    "C": {
+      "item": "ae2:calculation_processor"
+    },
+    "R": {
+      "tag": "forge:dusts/redstone"
+    },
+    "B": {
+      "item": "ae2:export_bus"
+    },
+    "K": {
+      "item": "minecraft:book"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:mod_export_bus"
+  }
+}

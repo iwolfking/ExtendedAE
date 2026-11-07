@@ -15,6 +15,7 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.NotNull;
@@ -109,6 +110,78 @@ public class EPPRecipeProvider extends RecipeProvider {
                 .define('I', ConventionTags.DIAMOND)
                 .unlockedBy(C, has(EPPItemAndBlock.INFINITY_CELL))
                 .save(c, EPP.id("cobblestone_cell"));
+
+        // Pattern Modifier
+        ShapedRecipeBuilder
+                .shaped(EPPItemAndBlock.PATTERN_MODIFIER)
+                .pattern("GPG")
+                .pattern(" L ")
+                .define('G', ConventionTags.dye(DyeColor.GREEN))
+                .define('P', AEItems.BLANK_PATTERN)
+                .define('L', AEItems.LOGIC_PROCESSOR)
+                .unlockedBy(C, has(EPPItemAndBlock.PATTERN_MODIFIER))
+                .save(c, EPP.id("pattern_modifier"));
+
+        // Tag Storage Bus
+        ShapedRecipeBuilder
+                .shaped(EPPItemAndBlock.TAG_STORAGE_BUS)
+                .pattern(" L ")
+                .pattern("RBR")
+                .pattern(" K ")
+                .define('L', AEItems.LOGIC_PROCESSOR)
+                .define('R', ConventionTags.REDSTONE)
+                .define('B', AEParts.STORAGE_BUS)
+                .define('K', Items.BOOK)
+                .unlockedBy(C, has(EPPItemAndBlock.TAG_STORAGE_BUS))
+                .save(c, EPP.id("tag_storage_bus"));
+
+        // Tag Export Bus
+        ShapedRecipeBuilder
+                .shaped(EPPItemAndBlock.TAG_EXPORT_BUS)
+                .pattern(" L ")
+                .pattern("RBR")
+                .pattern(" K ")
+                .define('L', AEItems.LOGIC_PROCESSOR)
+                .define('R', ConventionTags.REDSTONE)
+                .define('B', AEParts.EXPORT_BUS)
+                .define('K', Items.BOOK)
+                .unlockedBy(C, has(EPPItemAndBlock.TAG_EXPORT_BUS))
+                .save(c, EPP.id("tag_export_bus"));
+
+        // Mod Storage Bus
+        ShapedRecipeBuilder
+                .shaped(EPPItemAndBlock.MOD_STORAGE_BUS)
+                .pattern(" C ")
+                .pattern("RBR")
+                .pattern(" K ")
+                .define('C', AEItems.CALCULATION_PROCESSOR)
+                .define('R', ConventionTags.REDSTONE)
+                .define('B', AEParts.STORAGE_BUS)
+                .define('K', Items.BOOK)
+                .unlockedBy(C, has(EPPItemAndBlock.MOD_STORAGE_BUS))
+                .save(c, EPP.id("mod_storage_bus"));
+
+        // Mod Export Bus
+        ShapedRecipeBuilder
+                .shaped(EPPItemAndBlock.MOD_EXPORT_BUS)
+                .pattern(" C ")
+                .pattern("RBR")
+                .pattern(" K ")
+                .define('C', AEItems.CALCULATION_PROCESSOR)
+                .define('R', ConventionTags.REDSTONE)
+                .define('B', AEParts.EXPORT_BUS)
+                .define('K', Items.BOOK)
+                .unlockedBy(C, has(EPPItemAndBlock.MOD_EXPORT_BUS))
+                .save(c, EPP.id("mod_export_bus"));
+
+        // Active Formation Plane
+        ShapelessRecipeBuilder
+                .shapeless(EPPItemAndBlock.ACTIVE_FORMATION_PLANE)
+                .requires(AEParts.FORMATION_PLANE)
+                .requires(AEParts.EXPORT_BUS)
+                .requires(AEItems.ENGINEERING_PROCESSOR)
+                .unlockedBy(C, has(EPPItemAndBlock.ACTIVE_FORMATION_PLANE))
+                .save(c, EPP.id("active_formation_plane"));
 
         // Extended IO Bus
         ShapedRecipeBuilder

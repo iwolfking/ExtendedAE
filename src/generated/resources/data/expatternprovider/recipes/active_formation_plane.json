@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "ae2:formation_plane"
+    },
+    {
+      "item": "ae2:export_bus"
+    },
+    {
+      "item": "ae2:engineering_processor"
+    }
+  ],
+  "result": {
+    "item": "expatternprovider:active_formation_plane"
+  }
+}

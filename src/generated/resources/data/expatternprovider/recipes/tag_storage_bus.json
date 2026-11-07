@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " L ",
+    "RBR",
+    " K "
+  ],
+  "key": {
+    "L": {
+      "item": "ae2:logic_processor"
+    },
+    "R": {
+      "tag": "forge:dusts/redstone"
+    },
+    "B": {
+      "item": "ae2:storage_bus"
+    },
+    "K": {
+      "item": "minecraft:book"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:tag_storage_bus"
+  }
+}

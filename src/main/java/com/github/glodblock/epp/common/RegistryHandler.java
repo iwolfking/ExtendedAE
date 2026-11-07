@@ -126,6 +126,12 @@ public class RegistryHandler {
         registerMenu(registry, ContainerAssemblerMatrix.TYPE);
         registerMenu(registry, ContainerExMolecularAssembler.TYPE);
         registerMenu(registry, ContainerPreciseExportBus.TYPE);
+        registerMenu(registry, ContainerPatternModifier.TYPE);
+        registerMenu(registry, ContainerActiveFormationPlane.TYPE);
+        registerMenu(registry, ContainerModExportBus.TYPE);
+        registerMenu(registry, ContainerModStorageBus.TYPE);
+        registerMenu(registry, ContainerTagExportBus.TYPE);
+        registerMenu(registry, ContainerTagStorageBus.TYPE);
         registerMenu(registry, ContainerExPatternProvider.TYPE);
         registerMenu(registry, ContainerExInterface.TYPE);
         registerMenu(registry, ContainerExIOBus.EXPORT_TYPE);
@@ -191,6 +197,31 @@ public class RegistryHandler {
         Upgrades.add(AEItems.FUZZY_CARD, EPPItemAndBlock.EX_IMPORT_BUS, 1, "group.ex_io_bus_part");
         Upgrades.add(AEItems.ENERGY_CARD, EPPItemAndBlock.WIRELESS_CONNECTOR, 4, "gui.expatternprovider.wireless_connect");
         Upgrades.add(AEItems.ENERGY_CARD, EPPItemAndBlock.WIRELESS_HUB, 4, "gui.expatternprovider.wireless_hub");
+
+        // Mod Export Bus
+        Upgrades.add(AEItems.CAPACITY_CARD, EPPItemAndBlock.MOD_EXPORT_BUS, 2, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.REDSTONE_CARD, EPPItemAndBlock.MOD_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.SPEED_CARD, EPPItemAndBlock.MOD_EXPORT_BUS, 4, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.INVERTER_CARD, EPPItemAndBlock.MOD_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.FUZZY_CARD, EPPItemAndBlock.MOD_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.CRAFTING_CARD, EPPItemAndBlock.MOD_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        // Tag Export Bus
+        Upgrades.add(AEItems.CAPACITY_CARD, EPPItemAndBlock.TAG_EXPORT_BUS, 2, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.REDSTONE_CARD, EPPItemAndBlock.TAG_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.SPEED_CARD, EPPItemAndBlock.TAG_EXPORT_BUS, 4, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.INVERTER_CARD, EPPItemAndBlock.TAG_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.FUZZY_CARD, EPPItemAndBlock.TAG_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.CRAFTING_CARD, EPPItemAndBlock.TAG_EXPORT_BUS, 1, "group.ex_io_bus_part");
+        // Mod Storage Bus
+        Upgrades.add(AEItems.FUZZY_CARD, EPPItemAndBlock.MOD_STORAGE_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.INVERTER_CARD, EPPItemAndBlock.MOD_STORAGE_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.CAPACITY_CARD, EPPItemAndBlock.MOD_STORAGE_BUS, 5, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.REDSTONE_CARD, EPPItemAndBlock.MOD_STORAGE_BUS, 1, "group.ex_io_bus_part");
+        // Tag Storage Bus
+        Upgrades.add(AEItems.FUZZY_CARD, EPPItemAndBlock.TAG_STORAGE_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.INVERTER_CARD, EPPItemAndBlock.TAG_STORAGE_BUS, 1, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.CAPACITY_CARD, EPPItemAndBlock.TAG_STORAGE_BUS, 5, "group.ex_io_bus_part");
+        Upgrades.add(AEItems.REDSTONE_CARD, EPPItemAndBlock.TAG_STORAGE_BUS, 1, "group.ex_io_bus_part");
     }
 
     private void registerStorageHandler() {
@@ -202,6 +233,12 @@ public class RegistryHandler {
         PartModels.registerModels(PartExPatternProvider.MODELS);
         PartModels.registerModels(PartExInterface.MODELS);
         PartModels.registerModels(PartExExportBus.MODELS);
+        PartModels.registerModels(PartActiveFormationPlane.MODELS);
+        PartModels.registerModels(java.util.Arrays.asList(PartModExportBus.MODEL_BASE));
+        PartModels.registerModels(java.util.Arrays.asList(PartModStorageBus.MODEL_BASE));
+        PartModels.registerModels(java.util.Arrays.asList(PartTagExportBus.MODEL_BASE));
+        PartModels.registerModels(java.util.Arrays.asList(PartTagStorageBus.MODEL_BASE));
+        // PartActiveFormationPlane uses client model loader, no PartModels base
         PartModels.registerModels(PartPreciseExportBus.MODELS);
         PartModels.registerModels(PartExImportBus.MODELS);
         PartModels.registerModels(PartModelsHelper.createModels(AdvancedPatternAccessTerminalPart.class));

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " W ",
+    "ICI",
+    " I "
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:ingots/iron"
+    },
+    "W": {
+      "item": "expatternprovider:wireless_tool"
+    },
+    "C": {
+      "item": "ae2:calculation_processor"
+    }
+  },
+  "result": {
+    "item": "expatternprovider:wireless_advanced_tool"
+  }
+}

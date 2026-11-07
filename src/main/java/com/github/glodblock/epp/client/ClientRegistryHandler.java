@@ -1,4 +1,5 @@
 package com.github.glodblock.epp.client;
+import appeng.core.AppEng;
 
 import appeng.client.render.SimpleModelLoader;
 import appeng.client.render.model.AutoRotatingBakedModel;
@@ -6,6 +7,8 @@ import appeng.init.client.InitScreens;
 import appeng.menu.SlotSemantics;
 import com.github.glodblock.epp.EPP;
 import com.github.glodblock.epp.client.gui.*;
+import com.github.glodblock.epp.client.model.ExPlaneModel;
+import com.github.glodblock.epp.client.gui.GuiActiveFormationPlane;
 import com.github.glodblock.epp.client.model.AERotatableBlocks;
 import com.github.glodblock.epp.client.model.ExDriveModel;
 import com.github.glodblock.epp.client.render.tesr.ExDriveTESR;
@@ -69,6 +72,36 @@ public class ClientRegistryHandler {
                 ContainerPreciseExportBus.TYPE,
                 (menu, playerInv, title, style) -> new GuiPreciseExportBus(menu, playerInv, title, style),
                 "/screens/precise_export_bus.json"
+        );
+        InitScreens.<ContainerPatternModifier, GuiPatternModifier>register(
+                ContainerPatternModifier.TYPE,
+                (menu, playerInv, title, style) -> new GuiPatternModifier(menu, playerInv, title, style),
+                "/screens/pattern_modifier.json"
+        );
+        InitScreens.<ContainerActiveFormationPlane, GuiActiveFormationPlane>register(
+                ContainerActiveFormationPlane.TYPE,
+                (menu, playerInv, title, style) -> new GuiActiveFormationPlane(menu, playerInv, title, style),
+                "/screens/active_formation_plane.json"
+        );
+        InitScreens.<ContainerModExportBus, GuiModExportBus>register(
+                ContainerModExportBus.TYPE,
+                (menu, playerInv, title, style) -> new GuiModExportBus(menu, playerInv, title, style),
+                "/screens/mod_export_bus.json"
+        );
+        InitScreens.<ContainerModStorageBus, GuiModStorageBus>register(
+                ContainerModStorageBus.TYPE,
+                (menu, playerInv, title, style) -> new GuiModStorageBus(menu, playerInv, title, style),
+                "/screens/mod_storage_bus.json"
+        );
+        InitScreens.<ContainerTagExportBus, GuiTagExportBus>register(
+                ContainerTagExportBus.TYPE,
+                (menu, playerInv, title, style) -> new GuiTagExportBus(menu, playerInv, title, style),
+                "/screens/tag_export_bus.json"
+        );
+        InitScreens.<ContainerTagStorageBus, GuiTagStorageBus>register(
+                ContainerTagStorageBus.TYPE,
+                (menu, playerInv, title, style) -> new GuiTagStorageBus(menu, playerInv, title, style),
+                "/screens/tag_storage_bus.json"
         );
         InitScreens.<ContainerExPatternProvider, GuiExPatternProvider>register(
                 ContainerExPatternProvider.TYPE,
@@ -149,5 +182,9 @@ public class ClientRegistryHandler {
     public void modelRegistryEvent(ModelRegistryEvent event) {
         ModelLoaderRegistry.registerLoader(ResourceLocation.fromNamespaceAndPath(EPP.MODID, "ex_drive"),
                 new SimpleModelLoader<>(ExDriveModel::new));
+        ModelLoaderRegistry.registerLoader(new ResourceLocation(EPP.MODID, "active_formation_plane"),
+                new SimpleModelLoader<>(() -> new ExPlaneModel(AppEng.makeId("part/active_formation_plane"))));
+        ModelLoaderRegistry.registerLoader(new ResourceLocation(EPP.MODID, "active_formation_plane_on"),
+                new SimpleModelLoader<>(() -> new ExPlaneModel(AppEng.makeId("part/active_formation_plane_on"))));
     }
 }

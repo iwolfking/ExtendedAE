@@ -1,5 +1,4 @@
 package com.github.glodblock.epp.common.items;
-import com.github.glodblock.epp.EPP;
 
 import appeng.util.InteractionUtil;
 import com.github.glodblock.epp.common.EPPItemAndBlock;
@@ -26,7 +25,7 @@ import java.util.List;
 
 public class ItemWirelessAdvancedConnectTool extends Item {
     public ItemWirelessAdvancedConnectTool() {
-        super(new Item.Properties().stacksTo(1));
+        super(new Item.Properties().stacksTo(1).tab(EPPItemAndBlock.TAB));
     }
 
     @Override

@@ -8,10 +8,13 @@ import appeng.api.networking.storage.IStorageService;
 import appeng.api.networking.energy.IEnergyService;
 import appeng.helpers.InterfaceLogic;
 import appeng.parts.automation.ExportBusPart;
+import com.github.glodblock.epp.util.helper.CraftingRecipePattern;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.phys.BlockHitResult;
 
+import appeng.crafting.pattern.AECraftingPattern;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -140,5 +143,10 @@ public class Ae2Reflect {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to invoke createTransferContext", e);
         }
+    }
+
+
+    public static CraftingRecipe getCraftRecipe(AECraftingPattern owner) {
+        return ((CraftingRecipePattern) owner).getRecipeHolder();
     }
 }
