@@ -222,6 +222,8 @@ public class RegistryHandler {
         Upgrades.add(AEItems.INVERTER_CARD, EPPItemAndBlock.TAG_STORAGE_BUS, 1, "group.ex_io_bus_part");
         Upgrades.add(AEItems.CAPACITY_CARD, EPPItemAndBlock.TAG_STORAGE_BUS, 5, "group.ex_io_bus_part");
         Upgrades.add(AEItems.REDSTONE_CARD, EPPItemAndBlock.TAG_STORAGE_BUS, 1, "group.ex_io_bus_part");
+
+        Upgrades.add(AEItems.SPEED_CARD, EPPItemAndBlock.EX_ASSEMBLER, 5, "gui.expatternprovider.ex_assembler");
     }
 
     private void registerStorageHandler() {
