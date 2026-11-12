@@ -13,6 +13,8 @@ import com.github.glodblock.epp.network.packet.CUpdatePage;
 import com.github.glodblock.epp.network.packet.CGenericPacket;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Inventory;
 
 public class GuiExMolecularAssembler extends UpgradeableScreen<ContainerExMolecularAssembler> {
@@ -46,13 +48,13 @@ public class GuiExMolecularAssembler extends UpgradeableScreen<ContainerExMolecu
         }
         EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("show"));
         this.menu.showPage();
-        this.pb.setFullMsg(new net.minecraft.network.chat.TextComponent(this.menu.getCurrentProgress() + "%"));
+        this.pb.setFullMsg(new TextComponent(this.menu.getCurrentProgress() + "%"));
     }
 
     @Override
     public void drawFG(PoseStack poseStack, int offsetX, int offsetY, int mouseX, int mouseY) {
         this.font.draw(poseStack,
-                new net.minecraft.network.chat.TranslatableComponent("gui.expatternprovider.ex_molecular_assembler.number", this.menu.page + 1).getVisualOrderText(),
+                new TranslatableComponent("gui.expatternprovider.ex_molecular_assembler.number", this.menu.page + 1).getVisualOrderText(),
                 8, 18,
                 style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB());
     }

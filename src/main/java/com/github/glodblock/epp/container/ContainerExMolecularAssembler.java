@@ -12,6 +12,7 @@ import appeng.menu.interfaces.IProgressProvider;
 import appeng.menu.slot.AppEngSlot;
 import appeng.menu.slot.IOptionalSlot;
 import appeng.menu.slot.OutputSlot;
+import appeng.menu.slot.RestrictedInputSlot;
 import com.github.glodblock.epp.api.IPage;
 import com.github.glodblock.epp.client.ExSemantics;
 import com.github.glodblock.epp.common.tileentities.TileExMolecularAssembler;
@@ -19,6 +20,7 @@ import com.github.glodblock.epp.network.packet.sync.IActionHolder;
 import com.github.glodblock.epp.network.packet.sync.Paras;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -58,15 +60,15 @@ public class ContainerExMolecularAssembler extends UpgradeableMenu<TileExMolecul
         this.molecularAssembler = host;
         for (int i = 0; i < TileExMolecularAssembler.MAX_THREAD; i++) {
             var inv = this.molecularAssembler.getCraftInventory(i);
-            for (int j = 0; j < 9; j ++) {
-                this.addSlot(new ExMolecularAssemblerPatternSlot(this, inv, j), SLOT[i]);
+            for (int j = 0; j < 9; j++) {
+                this.addSlot(new ExMolecularAssemblerPatternSlot(this, inv, j, i), SLOT[i]);
             }
             this.outputs.add((AppEngSlot) this.addSlot(new OutputSlot(inv, 9, null), SlotSemantics.MACHINE_OUTPUT));
         }
     }
 
     public void showPage() {
-        for (int x = 0; x < TileExMolecularAssembler.MAX_THREAD; x ++) {
+        for (int x = 0; x < TileExMolecularAssembler.MAX_THREAD; x++) {
             for (var slot : this.getSlots(SLOT[x])) {
                 if (slot instanceof AppEngSlot as) {
                     as.setActive(this.page == x);
@@ -75,7 +77,6 @@ public class ContainerExMolecularAssembler extends UpgradeableMenu<TileExMolecul
             this.outputs.get(x).setActive(this.page == x);
         }
     }
-
     public boolean isValidItemForSlot(int slotIndex, ItemStack i) {
         var details = this.molecularAssembler.getCurrentPattern(this.page);
         if (details != null) {
@@ -119,10 +120,12 @@ public class ContainerExMolecularAssembler extends UpgradeableMenu<TileExMolecul
     public static class ExMolecularAssemblerPatternSlot extends AppEngSlot implements IOptionalSlot {
 
         private final ContainerExMolecularAssembler mac;
+        private final int threadIndex;
 
-        public ExMolecularAssemblerPatternSlot(ContainerExMolecularAssembler mac, InternalInventory inv, int invSlot) {
+        public ExMolecularAssemblerPatternSlot(ContainerExMolecularAssembler mac, InternalInventory inv, int invSlot, int threadIndex) {
             super(inv, invSlot);
             this.mac = mac;
+            this.threadIndex = threadIndex;
         }
 
         @Override
@@ -138,10 +141,7 @@ public class ContainerExMolecularAssembler extends UpgradeableMenu<TileExMolecul
 
         @Override
         public boolean isRenderDisabled() {
-            // Only draw the optional slot backgrounds for the currently selected thread page.
-            // Other pages are not positioned by the screen and would otherwise accumulate
-            // at the top-left corner of the GUI.
-            return getSlotIndex() / 9 == mac.page;
+            return this.threadIndex != mac.page;
         }
 
         @Override
@@ -149,10 +149,9 @@ public class ContainerExMolecularAssembler extends UpgradeableMenu<TileExMolecul
             if (!getInventory().getStackInSlot(getSlotIndex()).isEmpty()) {
                 return true;
             }
-            var pattern = mac.getHost().getCurrentPattern(this.mac.page);
+            var pattern = mac.getHost().getCurrentPattern(this.threadIndex);
             return getSlotIndex() >= 0 && getSlotIndex() < 9 && pattern != null && pattern.isSlotEnabled(getSlotIndex());
         }
-
         @Override
         public Point getBackgroundPos() {
             int s = getSlotIndex() % 9;

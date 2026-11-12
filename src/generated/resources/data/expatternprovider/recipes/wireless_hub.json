@@ -13,14 +13,14 @@
       "item": "ae2:quantum_link"
     },
     "E": {
-      "tag": "ae2:engineering_processor"
+      "item": "ae2:engineering_processor"
     },
     "W": {
       "item": "expatternprovider:wireless_connect"
     }
   },
   "result": {
-    "item": "expatternprovider:wireless_connect",
-    "count": 2
+    "item": "expatternprovider:wireless_hub",
+    "count": 1
   }
 }
