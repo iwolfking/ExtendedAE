@@ -14,7 +14,6 @@ import appeng.core.AELog;
 import appeng.core.sync.packets.InterfaceTerminalPacket;
 import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.InventoryAction;
-import appeng.helpers.iface.PatternProviderLogic;
 import appeng.helpers.iface.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
@@ -23,17 +22,22 @@ import appeng.parts.crafting.PatternProviderPart;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+
 import com.github.glodblock.epp.common.parts.AdvancedPatternAccessTerminalPart;
 import com.github.glodblock.epp.common.parts.PartExPatternProvider;
 import com.github.glodblock.epp.common.tileentities.TileExPatternProvider;
 import com.github.glodblock.epp.common.tileentities.matrix.TileAssemblerMatrixPattern;
+import com.github.glodblock.epp.integration.advanced_ae.AdvancedAEHelper;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fml.loading.LoadingModList;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -41,36 +45,45 @@ import java.util.*;
 public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
 
     private final IConfigurableObject host;
+
     @GuiSync(1)
     public ShowPatternProviders showPatternProviders = ShowPatternProviders.VISIBLE;
 
     public ShowPatternProviders getShownProviders() {
         return showPatternProviders;
     }
-    
+
     public static final MenuType<AdvancedInterfaceTerminalMenu> TYPE = MenuTypeBuilder
             .create(AdvancedInterfaceTerminalMenu::new, AdvancedPatternAccessTerminalPart.class)
             .requirePermission(SecurityPermissions.BUILD)
             .build("advanced_interface_terminal");
+
     // We use this serial number to uniquely identify all inventories we send to the client
     // It is used in packets sent by the client to interact with these inventories
     private static long inventorySerial = Integer.MIN_VALUE;
-    private final Map<Object, List<InvTracker>> diList = new IdentityHashMap<>();
+
+    public final Map<Object, List<InvTracker>> diList = new IdentityHashMap<>();
     private final Long2ObjectOpenHashMap<InvTracker> byId = new Long2ObjectOpenHashMap<>();
+
     /**
-     * Tracks hosts that were visible before, even if they no longer match the filter. For
-     * {@link ShowPatternProviders#NOT_FULL}.
+     * Tracks hosts that were visible before, even if they no longer match the filter.
+     * For {@link ShowPatternProviders#NOT_FULL}.
      */
-    private final Set<PatternProviderLogicHost> pinnedHosts = Collections.newSetFromMap(new IdentityHashMap<>());
+    public final Set<Object> pinnedHosts = Collections.newSetFromMap(new IdentityHashMap<>());
 
     public AdvancedInterfaceTerminalMenu(int id, Inventory ip, AdvancedPatternAccessTerminalPart anchor) {
         this(TYPE, id, ip, anchor, true);
     }
 
-    public AdvancedInterfaceTerminalMenu(MenuType<?> menuType, int id, Inventory ip, IConfigurableObject host,
-                                 boolean bindInventory) {
+    public AdvancedInterfaceTerminalMenu(
+            MenuType<?> menuType,
+            int id,
+            Inventory ip,
+            IConfigurableObject host,
+            boolean bindInventory) {
         super(menuType, id, ip, host);
         this.host = host;
+
         if (bindInventory) {
             this.createPlayerInventorySlots(ip);
         }
@@ -82,7 +95,8 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
             return;
         }
 
-        showPatternProviders = this.host.getConfigManager().getSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS);
+        showPatternProviders =
+                this.host.getConfigManager().getSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS);
 
         super.broadcastChanges();
 
@@ -93,15 +107,27 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         IGrid grid = getGrid();
 
         VisitorState state = new VisitorState();
+
         if (grid != null) {
             visitInterfaceHosts(grid, PatternProviderBlockEntity.class, state);
             visitInterfaceHosts(grid, PatternProviderPart.class, state);
             visitInterfaceHosts(grid, TileExPatternProvider.class, state);
             visitInterfaceHosts(grid, PartExPatternProvider.class, state);
+            AdvancedAEHelper.visitAdvancedPatternProviders(grid, state, this);
             visitMatrixPatterns(grid, state);
 
-            // Ensure we don't keep references to removed hosts
-            pinnedHosts.removeIf(host -> host.getLogic().getGrid() != grid);
+            pinnedHosts.removeIf(host -> {
+                if (host instanceof PatternProviderLogicHost provider) {
+                    return provider.getLogic().getGrid() != grid;
+                }
+                else if(LoadingModList.get().getModFileById("advanced_ae") != null) {
+                    if(AdvancedAEHelper.isAdvancedHost(host)) {
+                        return AdvancedAEHelper.handleRemovingProvider(host, grid);
+                    }
+                }
+
+                return true;
+            });
         } else {
             pinnedHosts.clear();
         }
@@ -116,46 +142,60 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
     @Nullable
     private IGrid getGrid() {
         IActionHost host = this.getActionHost();
+
         if (host != null) {
             final IGridNode agn = host.getActionableNode();
+
             if (agn != null && agn.isActive()) {
                 return agn.getGrid();
             }
         }
+
         return null;
     }
 
-    private static class VisitorState {
-        // Total number of interface hosts founds
-        int total;
-        // Set to true if any visited machines were missing from diList, or had a different name
-        boolean forceFullUpdate;
+    public static class VisitorState {
+        // Total number of interface hosts found.
+        public int total;
+
+        // Set to true if any visited machines were missing from diList, or had a different name.
+        public boolean forceFullUpdate;
     }
 
-    private boolean isFull(PatternProviderLogic logic) {
-        for (int i = 0; i < logic.getPatternInv().size(); i++) {
-            if (logic.getPatternInv().getStackInSlot(i).isEmpty()) {
+    public boolean isFull(InternalInventory inventory) {
+        for (int i = 0; i < inventory.size(); i++) {
+            if (inventory.getStackInSlot(i).isEmpty()) {
                 return false;
             }
         }
+
         return true;
     }
 
     private boolean isHostVisible(PatternProviderLogicHost host) {
         var logic = host.getLogic();
-        boolean isVisible = logic.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
+
+        boolean isVisible = logic.getConfigManager()
+                .getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
 
         return switch (getShownProviders()) {
             case VISIBLE -> isVisible;
-            case NOT_FULL -> isVisible && (pinnedHosts.contains(host) || !isFull(logic));
+            case NOT_FULL -> isVisible && (pinnedHosts.contains(host)
+                    || !isFull(logic.getPatternInv()));
             case ALL -> true;
         };
     }
 
-    private <T extends PatternProviderLogicHost> void visitInterfaceHosts(IGrid grid, Class<T> machineClass,
-                                                                          VisitorState state) {
+
+
+    private <T extends PatternProviderLogicHost> void visitInterfaceHosts(
+            IGrid grid,
+            Class<T> machineClass,
+            VisitorState state) {
+
         for (var ih : grid.getActiveMachines(machineClass)) {
             var dual = ih.getLogic();
+
             if (!isHostVisible(ih)) {
                 continue;
             }
@@ -169,33 +209,44 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
                     state.forceFullUpdate = true;
                 }
             }
+
             state.total++;
         }
     }
 
+
+
+
+
     @Override
     public void doAction(ServerPlayer player, InventoryAction action, int slot, long id) {
         final InvTracker inv = this.byId.get(id);
+
         if (inv == null) {
-            // Can occur if the client sent an interaction packet right before an inventory got removed
+            // Can occur if the client sent an interaction packet right before an inventory got removed.
             return;
         }
+
         if (slot < 0 || (slot + inv.line * 9) >= inv.server.size()) {
-            // Client refers to an invalid slot. This should NOT happen
+            // Client refers to an invalid slot. This should NOT happen.
             AELog.warn("Client refers to invalid slot %d of inventory %s", slot, inv.name.getString());
             return;
         }
 
         final ItemStack is = inv.server.getStackInSlot(slot + inv.line * 9);
 
-        var interfaceSlot = new FilteredInternalInventory(inv.server.getSlotInv(slot + inv.line * 9), new PatternSlotFilter());
+        var interfaceSlot = new FilteredInternalInventory(
+                inv.server.getSlotInv(slot + inv.line * 9),
+                new PatternSlotFilter());
 
         var carried = getCarried();
+
         switch (action) {
             case PICKUP_OR_SET_DOWN:
 
                 if (!carried.isEmpty()) {
                     ItemStack inSlot = interfaceSlot.getStackInSlot(0);
+
                     if (inSlot.isEmpty()) {
                         setCarried(interfaceSlot.addItems(carried));
                     } else {
@@ -220,13 +271,16 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
                 }
 
                 break;
+
             case SPLIT_OR_PLACE_SINGLE:
 
                 if (!carried.isEmpty()) {
                     ItemStack extra = carried.split(1);
+
                     if (!extra.isEmpty()) {
                         extra = interfaceSlot.addItems(extra);
                     }
+
                     if (!extra.isEmpty()) {
                         carried.grow(extra.getCount());
                     }
@@ -235,8 +289,10 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
                 }
 
                 break;
+
             case SHIFT_CLICK: {
                 var stack = interfaceSlot.getStackInSlot(0).copy();
+
                 if (!player.getInventory().add(stack)) {
                     interfaceSlot.setItemDirect(0, stack);
                 } else {
@@ -244,9 +300,11 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
                 }
             }
             break;
+
             case MOVE_REGION:
                 for (int x = 0; x < inv.server.size(); x++) {
                     var stack = inv.server.getStackInSlot(x);
+
                     if (!player.getInventory().add(stack)) {
                         interfaceSlot.setItemDirect(0, stack);
                     } else {
@@ -255,6 +313,7 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
                 }
 
                 break;
+
             case CREATIVE_DUPLICATE:
                 if (player.getAbilities().instabuild && carried.isEmpty()) {
                     setCarried(is.isEmpty() ? ItemStack.EMPTY : is.copy());
@@ -265,27 +324,36 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
 
     private void visitMatrixPatterns(IGrid grid, VisitorState state) {
         for (var ih : grid.getActiveMachines(TileAssemblerMatrixPattern.class)) {
-            boolean isVisible = ih.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
+            boolean isVisible = ih.getConfigManager()
+                    .getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
+
             if (getShownProviders() == ShowPatternProviders.VISIBLE && !isVisible) {
                 continue;
             }
+
             if (getShownProviders() == ShowPatternProviders.NOT_FULL && !isVisible) {
                 continue;
             }
-            for (InvTracker t : this.diList.getOrDefault(ih, java.util.Collections.emptyList())) {
-                if (t == null || !t.name.equals(new net.minecraft.network.chat.TranslatableComponent("block.expatternprovider.assembler_matrix_pattern"))) {
+
+            for (InvTracker t : this.diList.getOrDefault(ih, Collections.emptyList())) {
+                if (t == null || !t.name.equals(
+                        new net.minecraft.network.chat.TranslatableComponent(
+                                "block.expatternprovider.assembler_matrix_pattern"))) {
                     state.forceFullUpdate = true;
                 }
             }
+
             state.total++;
         }
     }
 
-    private void addPatternProvider(IGrid grid ,Class<? extends PatternProviderLogicHost> clazz) {
+    private void addPatternProvider(IGrid grid, Class<? extends PatternProviderLogicHost> clazz) {
         for (var ih : grid.getActiveMachines(clazz)) {
             var dual = ih.getLogic();
+
             if (isHostVisible(ih)) {
                 List<InvTracker> list = this.diList.computeIfAbsent(ih, i -> new ArrayList<>());
+
                 for (int i = 0; i < ih.getLogic().getPatternInv().size() / 9; i++) {
                     list.add(new InvTracker(dual.getPatternInv(), dual.getTermName(), i));
                 }
@@ -294,18 +362,28 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
     }
 
 
+
     private void addMatrixProvider(IGrid grid) {
         for (var ih : grid.getActiveMachines(TileAssemblerMatrixPattern.class)) {
-            boolean isVisible = ih.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
+            boolean isVisible = ih.getConfigManager()
+                    .getSetting(Settings.PATTERN_ACCESS_TERMINAL) == YesNo.YES;
+
             if (getShownProviders() == ShowPatternProviders.VISIBLE && !isVisible) {
                 continue;
             }
+
             if (getShownProviders() == ShowPatternProviders.NOT_FULL && !isVisible) {
                 continue;
             }
+
             List<InvTracker> list = this.diList.computeIfAbsent(ih, i -> new ArrayList<>());
+
             for (int i = 0; i < ih.getPatternInventory().size() / 9; i++) {
-                list.add(new InvTracker(ih.getPatternInventory(), new net.minecraft.network.chat.TranslatableComponent("block.expatternprovider.assembler_matrix_pattern"), i));
+                list.add(new InvTracker(
+                        ih.getPatternInventory(),
+                        new TranslatableComponent(
+                                "block.expatternprovider.assembler_matrix_pattern"),
+                        i));
             }
         }
     }
@@ -324,13 +402,16 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         addPatternProvider(grid, PatternProviderPart.class);
         addPatternProvider(grid, TileExPatternProvider.class);
         addPatternProvider(grid, PartExPatternProvider.class);
+        AdvancedAEHelper.addAdvancedPatternProviders(grid, this);
         addMatrixProvider(grid);
 
         for (var list : this.diList.values()) {
             for (var inv : list) {
                 this.byId.put(inv.serverId, inv);
+
                 CompoundTag data = new CompoundTag();
                 this.addItems(data, inv, inv.line * 9, 9);
+
                 sendPacketToClient(InterfaceTerminalPacket.inventory(inv.serverId, data));
             }
         }
@@ -340,14 +421,20 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         for (var list : this.diList.values()) {
             for (var inv : list) {
                 CompoundTag data = null;
+
                 for (int x = 0; x < 9; x++) {
-                    if (this.isDifferent(inv.server.getStackInSlot(x + inv.line * 9), inv.client.getStackInSlot(x))) {
+                    if (this.isDifferent(
+                            inv.server.getStackInSlot(x + inv.line * 9),
+                            inv.client.getStackInSlot(x))) {
+
                         if (data == null) {
                             data = new CompoundTag();
                         }
+
                         this.addItems(data, inv, x + inv.line * 9, 1);
                     }
                 }
+
                 if (data != null) {
                     sendPacketToClient(InterfaceTerminalPacket.inventory(inv.serverId, data));
                 }
@@ -375,11 +462,12 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
 
         for (int x = 0; x < length; x++) {
             var itemNBT = new CompoundTag();
-
             var is = inv.server.getStackInSlot(x + offset);
 
-            // "update" client side.
-            inv.client.setItemDirect(x + (offset % 9), is.isEmpty() ? ItemStack.EMPTY : is.copy());
+            // Update client-side inventory cache.
+            inv.client.setItemDirect(
+                    x + (offset % 9),
+                    is.isEmpty() ? ItemStack.EMPTY : is.copy());
 
             if (!is.isEmpty()) {
                 is.save(itemNBT);
@@ -389,15 +477,18 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         }
     }
 
-    private static class InvTracker {
+    public static class InvTracker {
 
         private final long sortBy;
         private final long serverId;
-        private final Component name;
-        // This is used to track the inventory contents we sent to the client for change detection
+        public final Component name;
+
+        // This is used to track the inventory contents we sent to the client for change detection.
         private final InternalInventory client;
-        // This is a reference to the real inventory used by this machine
+
+        // This is a reference to the real inventory used by this machine.
         private final InternalInventory server;
+
         private final int line;
 
         public InvTracker(InternalInventory patterns, Component name, int line) {
@@ -411,6 +502,7 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
     }
 
     private static class PatternSlotFilter implements IAEItemFilter {
+
         @Override
         public boolean allowExtract(InternalInventory inv, int slot, int amount) {
             return true;
