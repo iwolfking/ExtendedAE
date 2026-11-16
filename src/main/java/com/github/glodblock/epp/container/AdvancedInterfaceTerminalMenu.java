@@ -113,7 +113,9 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
             visitInterfaceHosts(grid, PatternProviderPart.class, state);
             visitInterfaceHosts(grid, TileExPatternProvider.class, state);
             visitInterfaceHosts(grid, PartExPatternProvider.class, state);
-            AdvancedAEHelper.visitAdvancedPatternProviders(grid, state, this);
+            if(LoadingModList.get().getModFileById("advanced_ae") != null) {
+                AdvancedAEHelper.visitAdvancedPatternProviders(grid, state, this);
+            }
             visitMatrixPatterns(grid, state);
 
             pinnedHosts.removeIf(host -> {
@@ -402,7 +404,9 @@ public class AdvancedInterfaceTerminalMenu extends AEBaseMenu {
         addPatternProvider(grid, PatternProviderPart.class);
         addPatternProvider(grid, TileExPatternProvider.class);
         addPatternProvider(grid, PartExPatternProvider.class);
-        AdvancedAEHelper.addAdvancedPatternProviders(grid, this);
+        if(LoadingModList.get().getModFileById("advanced_ae") != null) {
+            AdvancedAEHelper.addAdvancedPatternProviders(grid, this);
+        }
         addMatrixProvider(grid);
 
         for (var list : this.diList.values()) {

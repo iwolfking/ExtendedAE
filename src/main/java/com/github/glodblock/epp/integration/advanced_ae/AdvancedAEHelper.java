@@ -3,8 +3,10 @@ package com.github.glodblock.epp.integration.advanced_ae;
 import appeng.api.config.Settings;
 import appeng.api.config.ShowPatternProviders;
 import appeng.api.config.YesNo;
+import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import com.github.glodblock.epp.container.AdvancedInterfaceTerminalMenu;
+import net.minecraft.network.chat.Component;
 import net.pedroksl.advanced_ae.common.entities.AdvPatternProviderEntity;
 import net.pedroksl.advanced_ae.common.entities.SmallAdvPatternProviderEntity;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogicHost;
@@ -33,8 +35,15 @@ public class AdvancedAEHelper {
                 continue;
             }
 
-            var inventory = ih.getTerminalPatternInventory();
-            var name = ih.getBlockEntity().getBlockState().getBlock().getName();
+            InternalInventory inventory = ih.getTerminalPatternInventory();
+            Component name;
+
+            if(ih instanceof AdvPatternProviderPart advPatternProviderPart) {
+                name = advPatternProviderPart.getCustomInventoryName();
+            }
+            else {
+                name = ih.getBlockEntity().getBlockState().getBlock().getName();
+            }
 
             List<AdvancedInterfaceTerminalMenu.InvTracker> list = menu.diList.computeIfAbsent(ih, i -> new ArrayList<>());
 
@@ -54,7 +63,14 @@ public class AdvancedAEHelper {
                 menu.pinnedHosts.add(ih);
             }
 
-            var name = ih.getBlockEntity().getBlockState().getBlock().getName();
+            Component name;
+
+            if(ih instanceof AdvPatternProviderPart advPatternProviderPart) {
+                name = advPatternProviderPart.getCustomInventoryName();
+            }
+            else {
+                name = ih.getBlockEntity().getBlockState().getBlock().getName();
+            }
 
             for (AdvancedInterfaceTerminalMenu.InvTracker t : menu.diList.getOrDefault(ih, Collections.emptyList())) {
                 if (t == null || !t.name.equals(name)) {
